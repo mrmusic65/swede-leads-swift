@@ -21,6 +21,7 @@ const EVENT_TYPE_META: Record<string, { label: string; icon: typeof Zap; classNa
   employer_registered: { label: 'Arbetsgivare', icon: Briefcase, className: 'bg-accent/20 text-accent-foreground' },
   address_changed: { label: 'Adressändring', icon: MapPin, className: 'bg-secondary text-secondary-foreground' },
   industry_changed: { label: 'Branschändring', icon: BarChart3, className: 'bg-secondary text-secondary-foreground' },
+  employee_count_updated: { label: 'Antal anställda', icon: BarChart3, className: 'bg-primary/10 text-primary' },
 };
 
 export default function Dashboard() {

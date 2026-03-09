@@ -545,25 +545,61 @@ Deno.serve(async (req) => {
             provSkipped++;
             continue;
           }
+          // Fetch existing record for change detection
+          const { data: existingRows } = await supabase
+            .from("companies")
+            .select("id, vat_registered, f_tax_registered, employer_registered, employees_estimate, address, city, postal_code")
+            .eq("org_number", company.org_number)
+            .limit(1);
+
+          if (!existingRows || existingRows.length === 0) {
+            provSkipped++;
+            continue;
+          }
+
+          const existing = existingRows[0];
           const enrichData = buildEnrichRecord(company);
           if (Object.keys(enrichData).length === 0) {
             provSkipped++;
             continue;
           }
-          const { error, count } = await supabase
+
+          // Detect changes and emit events
+          const changeEvents: any[] = [];
+          const today = new Date().toISOString().split("T")[0];
+
+          if (company.f_tax_registered === true && existing.f_tax_registered !== true) {
+            changeEvents.push({ company_id: existing.id, event_type: "f_tax_registered", event_date: today, event_source: provider.name, event_label: `${company.company_name} fick F-skattsedel` });
+          }
+          if (company.vat_registered === true && existing.vat_registered !== true) {
+            changeEvents.push({ company_id: existing.id, event_type: "vat_registered", event_date: today, event_source: provider.name, event_label: `${company.company_name} momsregistrerades` });
+          }
+          if (company.employer_registered === true && existing.employer_registered !== true) {
+            changeEvents.push({ company_id: existing.id, event_type: "employer_registered", event_date: today, event_source: provider.name, event_label: `${company.company_name} registrerades som arbetsgivare` });
+          }
+          if (company.address && existing.address && company.address !== existing.address) {
+            enrichData.last_address_change_date = today;
+            changeEvents.push({ company_id: existing.id, event_type: "address_changed", event_date: today, event_source: provider.name, event_label: `${company.company_name} bytte adress`, event_payload: { old_address: existing.address, new_address: company.address } });
+          }
+          if (company.employees_estimate && existing.employees_estimate && company.employees_estimate !== existing.employees_estimate) {
+            changeEvents.push({ company_id: existing.id, event_type: "employee_count_updated", event_date: today, event_source: provider.name, event_label: `${company.company_name} ändrade antal anställda`, event_payload: { old: existing.employees_estimate, new: company.employees_estimate } });
+          }
+
+          const { error } = await supabase
             .from("companies")
             .update(enrichData)
-            .eq("org_number", company.org_number)
-            .select("id");
+            .eq("org_number", company.org_number);
 
           if (error) {
             console.error(`[daily-import][${provider.name}] Enrich error for ${company.org_number}:`, error.message);
             provSkipped++;
-          } else if (count === 0) {
-            // No matching record to enrich
-            provSkipped++;
           } else {
             provEnriched++;
+            if (changeEvents.length > 0) {
+              await supabase.from("company_events").insert(changeEvents).then(({ error: evErr }) => {
+                if (evErr) console.error(`[daily-import][${provider.name}] Change event error:`, evErr.message);
+              });
+            }
           }
           continue;
         }
@@ -571,19 +607,42 @@ Deno.serve(async (req) => {
         // ── Insert providers: dedup by org_number ──
         let isDuplicate = false;
         if (company.org_number) {
-          const { data: existing } = await supabase
+          const { data: existingRows } = await supabase
             .from("companies")
-            .select("id")
+            .select("id, vat_registered, f_tax_registered, employer_registered, employees_estimate, address")
             .eq("org_number", company.org_number)
             .limit(1);
-          if (existing && existing.length > 0) {
+          if (existingRows && existingRows.length > 0) {
+            const existing = existingRows[0];
             // Merge/enrich existing record with new data
             const enrichData = buildEnrichRecord(company);
             if (Object.keys(enrichData).length > 0) {
-              await supabase
-                .from("companies")
-                .update(enrichData)
-                .eq("org_number", company.org_number);
+              // Detect changes
+              const changeEvents: any[] = [];
+              const today = new Date().toISOString().split("T")[0];
+              if (company.f_tax_registered === true && existing.f_tax_registered !== true) {
+                changeEvents.push({ company_id: existing.id, event_type: "f_tax_registered", event_date: today, event_source: provider.name, event_label: `${company.company_name} fick F-skattsedel` });
+              }
+              if (company.vat_registered === true && existing.vat_registered !== true) {
+                changeEvents.push({ company_id: existing.id, event_type: "vat_registered", event_date: today, event_source: provider.name, event_label: `${company.company_name} momsregistrerades` });
+              }
+              if (company.employer_registered === true && existing.employer_registered !== true) {
+                changeEvents.push({ company_id: existing.id, event_type: "employer_registered", event_date: today, event_source: provider.name, event_label: `${company.company_name} registrerades som arbetsgivare` });
+              }
+              if (company.address && existing.address && company.address !== existing.address) {
+                enrichData.last_address_change_date = today;
+                changeEvents.push({ company_id: existing.id, event_type: "address_changed", event_date: today, event_source: provider.name, event_label: `${company.company_name} bytte adress`, event_payload: { old_address: existing.address, new_address: company.address } });
+              }
+              if (company.employees_estimate && existing.employees_estimate && company.employees_estimate !== existing.employees_estimate) {
+                changeEvents.push({ company_id: existing.id, event_type: "employee_count_updated", event_date: today, event_source: provider.name, event_label: `${company.company_name} ändrade antal anställda`, event_payload: { old: existing.employees_estimate, new: company.employees_estimate } });
+              }
+
+              await supabase.from("companies").update(enrichData).eq("org_number", company.org_number);
+              if (changeEvents.length > 0) {
+                await supabase.from("company_events").insert(changeEvents).then(({ error: evErr }) => {
+                  if (evErr) console.error(`[daily-import][${provider.name}] Change event error:`, evErr.message);
+                });
+              }
               provEnriched++;
             }
             isDuplicate = true;

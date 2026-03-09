@@ -195,24 +195,22 @@ Deno.serve(async (req) => {
         }), { status: 400, headers: jsonHeaders });
       }
 
-      // ── Duplicate detection ──
-      // Fetch existing org_numbers and company_name+city combos
+      // ── Duplicate detection with change detection ──
       const orgNumbers = mapped.map(r => r.org_number).filter(Boolean);
-      const existingOrgs = new Set<string>();
+      const existingByOrgMap = new Map<string, any>();
       const existingNameCity = new Set<string>();
 
       if (orgNumbers.length > 0) {
         const { data: existingByOrg } = await supabase
           .from('companies')
-          .select('org_number, company_name, city')
+          .select('id, org_number, company_name, city, vat_registered, f_tax_registered, employer_registered, employees_estimate, address')
           .in('org_number', orgNumbers);
 
         existingByOrg?.forEach(e => {
-          if (e.org_number) existingOrgs.add(e.org_number);
+          if (e.org_number) existingByOrgMap.set(e.org_number, e);
         });
       }
 
-      // For rows without org_number, check name+city
       const nameCityPairs = mapped
         .filter(r => !r.org_number && r.company_name)
         .map(r => r.company_name?.toLowerCase() + '||' + (r.city?.toLowerCase() || ''));
@@ -231,10 +229,29 @@ Deno.serve(async (req) => {
 
       const toInsert: Record<string, any>[] = [];
       const duplicateRows: number[] = [];
+      const changeEvents: any[] = [];
+      const today = new Date().toISOString().split('T')[0];
 
       for (let i = 0; i < mapped.length; i++) {
         const r = mapped[i];
-        if (r.org_number && existingOrgs.has(r.org_number)) {
+        if (r.org_number && existingByOrgMap.has(r.org_number)) {
+          const existing = existingByOrgMap.get(r.org_number);
+          // Detect changes and emit events
+          if (r.f_tax_registered === 'true' && existing.f_tax_registered !== true) {
+            changeEvents.push({ company_id: existing.id, event_type: 'f_tax_registered', event_date: today, event_source: 'csv_upload', event_label: `${existing.company_name} fick F-skattsedel` });
+          }
+          if (r.vat_registered === 'true' && existing.vat_registered !== true) {
+            changeEvents.push({ company_id: existing.id, event_type: 'vat_registered', event_date: today, event_source: 'csv_upload', event_label: `${existing.company_name} momsregistrerades` });
+          }
+          if (r.employer_registered === 'true' && existing.employer_registered !== true) {
+            changeEvents.push({ company_id: existing.id, event_type: 'employer_registered', event_date: today, event_source: 'csv_upload', event_label: `${existing.company_name} registrerades som arbetsgivare` });
+          }
+          if (r.address && existing.address && r.address !== existing.address) {
+            changeEvents.push({ company_id: existing.id, event_type: 'address_changed', event_date: today, event_source: 'csv_upload', event_label: `${existing.company_name} bytte adress`, event_payload: { old_address: existing.address, new_address: r.address } });
+          }
+          if (r.employees_estimate && existing.employees_estimate && r.employees_estimate !== existing.employees_estimate) {
+            changeEvents.push({ company_id: existing.id, event_type: 'employee_count_updated', event_date: today, event_source: 'csv_upload', event_label: `${existing.company_name} ändrade antal anställda`, event_payload: { old: existing.employees_estimate, new: r.employees_estimate } });
+          }
           duplicateRows.push(i + 2);
           continue;
         }
@@ -246,6 +263,13 @@ Deno.serve(async (req) => {
           }
         }
         toInsert.push(r);
+      }
+
+      // Insert change events for duplicates
+      if (changeEvents.length > 0) {
+        await supabase.from('company_events').insert(changeEvents).then(({ error: evErr }) => {
+          if (evErr) console.error('Change event insert error:', evErr);
+        });
       }
 
       // Insert in batches and emit company_registered events
