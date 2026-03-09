@@ -25,7 +25,7 @@ export type Database = {
           id: string
           industry_label: string | null
           municipality: string | null
-          org_number: string
+          org_number: string | null
           phone_number: string | null
           phone_status: Database["public"]["Enums"]["phone_status"]
           postal_code: string | null
@@ -47,7 +47,7 @@ export type Database = {
           id?: string
           industry_label?: string | null
           municipality?: string | null
-          org_number: string
+          org_number?: string | null
           phone_number?: string | null
           phone_status?: Database["public"]["Enums"]["phone_status"]
           postal_code?: string | null
@@ -69,7 +69,7 @@ export type Database = {
           id?: string
           industry_label?: string | null
           municipality?: string | null
-          org_number?: string
+          org_number?: string | null
           phone_number?: string | null
           phone_status?: Database["public"]["Enums"]["phone_status"]
           postal_code?: string | null
