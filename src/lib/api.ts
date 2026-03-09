@@ -135,13 +135,16 @@ export async function addNote(companyId: string, userId: string, noteText: strin
 export async function fetchDashboardStats() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const today = new Date().toISOString().split('T')[0];
 
-  const [allRes, newRes, noWebRes, socialRes, hasPhoneRes] = await Promise.all([
+  const [allRes, newRes, noWebRes, socialRes, hasPhoneRes, newTodayRes, latestRes] = await Promise.all([
     supabase.from('companies').select('city, industry_label, website_status, phone_status, registration_date, company_name, id'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).gte('registration_date', thirtyDaysAgo.toISOString().split('T')[0]),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('website_status', 'no_website_found'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('website_status', 'social_only'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('phone_status', 'has_phone'),
+    supabase.from('companies').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00`),
+    supabase.from('companies').select('id, company_name, registration_date, city, industry_label').order('registration_date', { ascending: false }).limit(5),
   ]);
 
   const companies = allRes.data ?? [];
@@ -162,15 +165,24 @@ export async function fetchDashboardStats() {
   const topIndustries = Object.entries(industryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count }));
   const topCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count }));
   const topLeads = scored.slice(0, 5);
+  const latestCompanies = (latestRes.data ?? []).map(c => ({
+    id: c.id,
+    name: c.company_name,
+    registration_date: c.registration_date,
+    city: c.city,
+    industry_label: c.industry_label,
+  }));
 
   return {
     newLast30: newRes.count ?? 0,
     noWebsite: noWebRes.count ?? 0,
     socialOnly: socialRes.count ?? 0,
     hasPhone: hasPhoneRes.count ?? 0,
+    newToday: newTodayRes.count ?? 0,
     topIndustries,
     topCities,
     topLeads,
+    latestCompanies,
   };
 }
 
