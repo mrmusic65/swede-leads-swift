@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils';
-import type { PhoneStatus } from '@/lib/mock-data';
+import type { Enums } from '@/integrations/supabase/types';
+
+type PhoneStatus = Enums<'phone_status'>;
 
 const config: Record<PhoneStatus, { label: string; className: string }> = {
   has_phone: { label: 'Har telefon', className: 'bg-success/15 text-success' },

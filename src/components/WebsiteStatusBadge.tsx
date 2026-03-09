@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils';
-import type { WebsiteStatus } from '@/lib/mock-data';
+import type { Enums } from '@/integrations/supabase/types';
+
+type WebsiteStatus = Enums<'website_status'>;
 
 const config: Record<WebsiteStatus, { label: string; className: string }> = {
   has_website: { label: 'Har hemsida', className: 'bg-success/15 text-success' },

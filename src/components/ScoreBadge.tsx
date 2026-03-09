@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import type { Enums } from '@/integrations/supabase/types';
 
 export default function ScoreBadge({ score }: { score: number }) {
   return (
