@@ -61,6 +61,7 @@ export type Database = {
           id: string
           industry_group: string | null
           industry_label: string | null
+          last_address_change_date: string | null
           municipality: string | null
           org_number: string | null
           phone_number: string | null
@@ -89,6 +90,7 @@ export type Database = {
           id?: string
           industry_group?: string | null
           industry_label?: string | null
+          last_address_change_date?: string | null
           municipality?: string | null
           org_number?: string | null
           phone_number?: string | null
@@ -117,6 +119,7 @@ export type Database = {
           id?: string
           industry_group?: string | null
           industry_label?: string | null
+          last_address_change_date?: string | null
           municipality?: string | null
           org_number?: string | null
           phone_number?: string | null
@@ -311,6 +314,7 @@ export type Database = {
         | "employer_registered"
         | "address_changed"
         | "industry_changed"
+        | "employee_count_updated"
       import_status: "pending" | "processing" | "completed" | "failed"
       phone_status: "has_phone" | "missing" | "unknown"
       website_status:
@@ -452,6 +456,7 @@ export const Constants = {
         "employer_registered",
         "address_changed",
         "industry_changed",
+        "employee_count_updated",
       ],
       import_status: ["pending", "processing", "completed", "failed"],
       phone_status: ["has_phone", "missing", "unknown"],
