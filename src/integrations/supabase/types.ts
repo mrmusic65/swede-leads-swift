@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_runs: {
+        Row: {
+          created_at: string
+          id: string
+          matched_count: number
+          run_timestamp: string
+          watchlist_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          matched_count?: number
+          run_timestamp?: string
+          watchlist_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          matched_count?: number
+          run_timestamp?: string
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_runs_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "saved_watchlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
@@ -100,6 +132,47 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: []
+      }
+      company_events: {
+        Row: {
+          company_id: string
+          created_at: string
+          event_date: string
+          event_label: string | null
+          event_payload: Json | null
+          event_source: string | null
+          event_type: Database["public"]["Enums"]["company_event_type"]
+          id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event_date?: string
+          event_label?: string | null
+          event_payload?: Json | null
+          event_source?: string | null
+          event_type: Database["public"]["Enums"]["company_event_type"]
+          id?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event_date?: string
+          event_label?: string | null
+          event_payload?: Json | null
+          event_source?: string | null
+          event_type?: Database["public"]["Enums"]["company_event_type"]
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       imports: {
         Row: {
@@ -199,6 +272,30 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_watchlists: {
+        Row: {
+          created_at: string
+          filters_json: Json
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters_json?: Json
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -207,6 +304,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      company_event_type:
+        | "company_registered"
+        | "vat_registered"
+        | "f_tax_registered"
+        | "employer_registered"
+        | "address_changed"
+        | "industry_changed"
       import_status: "pending" | "processing" | "completed" | "failed"
       phone_status: "has_phone" | "missing" | "unknown"
       website_status:
@@ -341,6 +445,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      company_event_type: [
+        "company_registered",
+        "vat_registered",
+        "f_tax_registered",
+        "employer_registered",
+        "address_changed",
+        "industry_changed",
+      ],
       import_status: ["pending", "processing", "completed", "failed"],
       phone_status: ["has_phone", "missing", "unknown"],
       website_status: [
