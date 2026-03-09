@@ -181,8 +181,15 @@ export default function Leads() {
                 <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Inga bolag hittades.</td></tr>
               ) : (
                 companies.map(c => (
-                  <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">{c.company_name}</td>
+                  <tr key={c.id} className={`border-b last:border-0 transition-colors ${
+                    highlightIds.has(c.id)
+                      ? 'bg-accent/50 animate-fade-in'
+                      : 'hover:bg-muted/30'
+                  }`}>
+                    <td className="px-4 py-3 font-medium">
+                      {highlightIds.has(c.id) && <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-2" />}
+                      {c.company_name}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{c.city}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{c.registration_date}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{c.industry_label}</td>
