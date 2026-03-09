@@ -184,6 +184,20 @@ export async function fetchDashboardStats() {
     industry_label: c.industry_label,
   }));
 
+  // Best website prospects: score and sort
+  const prospectCompanies = (prospectsRes.data ?? []).map(c => ({
+    id: c.id,
+    name: c.company_name,
+    registration_date: c.registration_date,
+    city: c.city,
+    industry_label: c.industry_label,
+    website_status: c.website_status,
+    phone_status: c.phone_status,
+    phone_number: c.phone_number,
+    score: calculateLeadScore(c as Company),
+  }));
+  prospectCompanies.sort((a, b) => b.score - a.score);
+
   return {
     newLast30: newRes.count ?? 0,
     noWebsite: noWebRes.count ?? 0,
@@ -194,6 +208,7 @@ export async function fetchDashboardStats() {
     topCities,
     topLeads,
     latestCompanies,
+    bestWebsiteProspects: prospectCompanies.slice(0, 5),
   };
 }
 
