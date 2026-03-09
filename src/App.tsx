@@ -11,6 +11,8 @@ import LeadDetail from "./pages/LeadDetail";
 import ImportPage from "./pages/ImportPage";
 import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
+import WatchlistsPage from "./pages/WatchlistsPage";
+import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
