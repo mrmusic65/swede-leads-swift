@@ -30,6 +30,7 @@ export interface LeadFilters {
   city?: string;
   county?: string;
   website_status?: string;
+  website_statuses?: string[];
   phone_status?: string;
   industry_label?: string;
   minScore?: number;
