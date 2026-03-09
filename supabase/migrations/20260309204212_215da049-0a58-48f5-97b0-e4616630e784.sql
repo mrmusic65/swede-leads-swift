@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ALTER COLUMN org_number DROP NOT NULL;
