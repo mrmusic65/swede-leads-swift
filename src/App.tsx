@@ -10,6 +10,7 @@ import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
 import ImportPage from "./pages/ImportPage";
 import ExportPage from "./pages/ExportPage";
+import AdminPage from "./pages/AdminPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ const App = () => (
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/export" element={<ExportPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

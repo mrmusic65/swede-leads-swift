@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, Download, Settings, Zap, LogOut } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/import', label: 'Import CSV', icon: Upload },
   { to: '/export', label: 'Export CSV', icon: Download },
+  { to: '/admin', label: 'Admin', icon: Shield },
 ];
 
 export default function AppSidebar() {
