@@ -63,6 +63,47 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Featured: Best website prospects */}
+      {stats.bestWebsiteProspects.length > 0 && (
+        <Card className="border-primary/20 bg-primary/[0.02]">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Star className="w-4 h-4 text-warning" />
+                Bästa hemsideprospekten idag
+              </CardTitle>
+              <Link to="/leads" onClick={() => sessionStorage.setItem('activate_high_priority_view', '1')}>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  Visa alla high priority <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground">Bolag utan hemsida, med telefon, registrerade senaste 30 dagarna</p>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {stats.bestWebsiteProspects.map(p => (
+                <div key={p.id} className="flex items-center justify-between gap-3 py-2 border-b last:border-0">
+                  <div className="min-w-0 flex-1">
+                    <Link to={`/leads/${p.id}`} className="text-sm font-medium hover:text-primary transition-colors truncate block">
+                      {p.name}
+                    </Link>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {p.city}{p.industry_label ? ` · ${p.industry_label}` : ''}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <WebsiteStatusBadge status={p.website_status} />
+                    <PhoneStatusBadge status={p.phone_status} />
+                    <ScoreBadge score={p.score} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
