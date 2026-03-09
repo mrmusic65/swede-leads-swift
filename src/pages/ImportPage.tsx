@@ -97,15 +97,20 @@ export default function ImportPage() {
 
       {/* Step indicators */}
       <div className="flex items-center gap-2 text-xs">
-        {(['upload', 'map', 'results'] as const).map((s, i) => (
+      {(['upload', 'map', 'results'] as const).map((s, i) => {
+        const stepOrder: Record<Step, number> = { upload: 0, map: 1, importing: 2, results: 2 };
+        const currentOrder = stepOrder[step];
+        const thisOrder = i;
+        const isActive = (step === s) || (step === 'importing' && s === 'results');
+        const isDone = currentOrder > thisOrder;
+
+        return (
           <div key={s} className="flex items-center gap-2">
             {i > 0 && <div className="w-8 h-px bg-border" />}
             <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-              step === s || (step === 'importing' && s === 'results')
-                ? 'bg-primary text-primary-foreground'
-                : step === 'results' || (step === 'map' && s === 'upload') || (step === 'results' && s === 'map') || (step === 'importing' && s !== 'results')
-                  ? 'bg-success text-success-foreground'
-                  : 'bg-muted text-muted-foreground'
+              isActive ? 'bg-primary text-primary-foreground'
+                : isDone ? 'bg-success text-success-foreground'
+                : 'bg-muted text-muted-foreground'
             }`}>
               {i + 1}
             </div>
@@ -115,7 +120,8 @@ export default function ImportPage() {
               {s === 'results' && 'Resultat'}
             </span>
           </div>
-        ))}
+        );
+      })}
       </div>
 
       {/* ── STEP 1: Upload ── */}
