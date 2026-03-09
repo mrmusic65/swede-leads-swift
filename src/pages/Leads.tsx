@@ -16,13 +16,14 @@ import { Search, SlidersHorizontal, ExternalLink, X, ChevronLeft, ChevronRight, 
 
 const PAGE_SIZE = 30;
 
-type QuickFilter = 'no_website' | 'social_only' | 'has_phone' | 'new_30d';
+type QuickFilter = 'no_website' | 'social_only' | 'has_phone' | 'new_30d' | 'high_score';
 
 const QUICK_FILTERS: { key: QuickFilter; label: string; icon: typeof Globe }[] = [
   { key: 'no_website', label: 'Utan hemsida', icon: Globe },
   { key: 'social_only', label: 'Bara sociala', icon: Share2 },
   { key: 'has_phone', label: 'Har telefon', icon: Phone },
   { key: 'new_30d', label: 'Nya 30 dagar', icon: CalendarPlus },
+  { key: 'high_score', label: 'Hög score', icon: Star },
 ];
 
 function getHighPriorityFilters(): LeadFilters {
