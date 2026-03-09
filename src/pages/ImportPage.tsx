@@ -14,25 +14,6 @@ export default function ImportPage() {
   const [importedCount, setImportedCount] = useState(0);
   const [fileName, setFileName] = useState('');
 
-  const parseCSV = (text: string): Record<string, string>[] => {
-    const lines = text.split('\n').filter(l => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
-    return lines.slice(1).map(line => {
-      const values: string[] = [];
-      let current = '';
-      let inQuotes = false;
-      for (const char of line) {
-        if (char === '"') { inQuotes = !inQuotes; }
-        else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
-        else { current += char; }
-      }
-      values.push(current.trim());
-      const row: Record<string, string> = {};
-      headers.forEach((h, i) => { row[h] = values[i] || ''; });
-      return row;
-    });
-  };
 
   const handleFile = async (file: File) => {
     if (!user) return;
@@ -40,9 +21,8 @@ export default function ImportPage() {
     setStatus('loading');
     try {
       const text = await file.text();
-      const rows = parseCSV(text);
-      if (rows.length === 0) throw new Error('Filen verkar tom eller har fel format.');
-      const count = await importCompaniesFromCSV(rows, user.id, file.name);
+      if (!text.trim()) throw new Error('Filen verkar tom.');
+      const count = await importCompaniesFromCSV(text, file.name);
       setImportedCount(count);
       setStatus('success');
       toast({ title: 'Import klar!', description: `${count} bolag importerade.` });
