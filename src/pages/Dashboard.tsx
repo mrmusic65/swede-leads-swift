@@ -142,6 +142,85 @@ export default function Dashboard() {
         </CardContent>
       </Card>
 
+      {/* Recent alerts */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Bell className="w-4 h-4 text-warning" />
+              Senaste bevakningsalerts
+              {alertSummary.totalMatches > 0 && (
+                <Badge variant="default" className="text-[10px] ml-1">{alertSummary.totalMatches} träffar idag</Badge>
+              )}
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs"
+                disabled={runningAlerts}
+                onClick={async () => {
+                  setRunningAlerts(true);
+                  try {
+                    const result = await triggerAlertRun();
+                    toast.success(`Alert-körning klar: ${result.runs} bevakningar processade`);
+                    if (user) {
+                      const [ar, as_] = await Promise.all([
+                        fetchRecentAlertRuns(user.id, 10),
+                        fetchTodayAlertSummary(user.id),
+                      ]);
+                      setAlertRuns(ar);
+                      setAlertSummary(as_);
+                    }
+                  } catch {
+                    toast.error('Kunde inte köra alerts');
+                  } finally {
+                    setRunningAlerts(false);
+                  }
+                }}
+              >
+                <RefreshCw className={`w-3 h-3 ${runningAlerts ? 'animate-spin' : ''}`} />
+                {runningAlerts ? 'Kör...' : 'Kör alerts nu'}
+              </Button>
+              <Link to="/watchlists">
+                <Button variant="outline" size="sm" className="gap-1 text-xs">
+                  Bevakningar <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {alertRuns.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-4 text-center">Inga alerts ännu. Skapa en bevakning och kör alerts.</p>
+          ) : (
+            <div className="space-y-2">
+              {alertRuns.map(run => {
+                const wlName = (run.saved_watchlists as any)?.name || 'Okänd bevakning';
+                const date = new Date(run.run_timestamp);
+                const timeStr = date.toLocaleDateString('sv-SE') + ' ' + date.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+                return (
+                  <div key={run.id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${run.matched_count > 0 ? 'bg-warning/10 text-warning' : 'bg-secondary text-muted-foreground'}`}>
+                      <Bell className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium truncate">{wlName}</span>
+                        <Badge variant={run.matched_count > 0 ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 shrink-0">
+                          {run.matched_count} {run.matched_count === 1 ? 'träff' : 'träffar'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{timeStr}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Featured: Best website prospects */}
       {stats.bestWebsiteProspects.length > 0 && (
         <Card className="border-primary/20 bg-primary/[0.02]">
