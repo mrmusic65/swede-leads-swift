@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchDashboardStats } from '@/lib/api';
-import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy } from 'lucide-react';
+import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import ScoreBadge from '@/components/ScoreBadge';
@@ -18,8 +18,8 @@ export default function Dashboard() {
     return (
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold tracking-tight">Dashboard</h1></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       </div>
     );
@@ -29,6 +29,7 @@ export default function Dashboard() {
 
   const kpiCards = [
     { label: 'Nya bolag (30 dagar)', value: stats.newLast30, icon: Building2, color: 'text-primary' },
+    { label: 'Nya bolag idag', value: stats.newToday, icon: CalendarPlus, color: 'text-success' },
     { label: 'Utan hemsida', value: stats.noWebsite, icon: Globe, color: 'text-destructive' },
     { label: 'Bara sociala medier', value: stats.socialOnly, icon: Share2, color: 'text-warning' },
     { label: 'Har telefonnummer', value: stats.hasPhone, icon: Phone, color: 'text-success' },
@@ -41,7 +42,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground mt-1">Översikt över svenska leads</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         {kpiCards.map(card => (
           <Card key={card.label}>
             <CardContent className="pt-5 pb-4 px-5">
@@ -59,7 +60,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -121,6 +122,28 @@ export default function Dashboard() {
                   {lead.name}
                 </Link>
                 <ScoreBadge score={lead.score} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              Senast tillagda bolag
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {stats.latestCompanies.length === 0 && <p className="text-sm text-muted-foreground">Ingen data ännu.</p>}
+            {stats.latestCompanies.map(c => (
+              <div key={c.id} className="flex items-center justify-between">
+                <Link to={`/leads/${c.id}`} className="text-sm truncate mr-2 hover:text-primary transition-colors">
+                  {c.name}
+                </Link>
+                <span className="text-xs text-muted-foreground shrink-0">
+                  {c.registration_date || '–'}
+                </span>
               </div>
             ))}
           </CardContent>
