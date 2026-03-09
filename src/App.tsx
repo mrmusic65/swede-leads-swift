@@ -11,6 +11,8 @@ import LeadDetail from "./pages/LeadDetail";
 import ImportPage from "./pages/ImportPage";
 import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
+import WatchlistsPage from "./pages/WatchlistsPage";
+import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/export" element={<ExportPage />} />
+              <Route path="/watchlists" element={<WatchlistsPage />} />
+              <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
