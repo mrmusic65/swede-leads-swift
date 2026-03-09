@@ -14,7 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      companies: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_form: string | null
+          company_name: string
+          county: string | null
+          created_at: string
+          id: string
+          industry_label: string | null
+          municipality: string | null
+          org_number: string
+          phone_number: string | null
+          phone_status: Database["public"]["Enums"]["phone_status"]
+          postal_code: string | null
+          registration_date: string | null
+          sni_code: string | null
+          source_primary: string | null
+          updated_at: string
+          website_status: Database["public"]["Enums"]["website_status"]
+          website_url: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_form?: string | null
+          company_name: string
+          county?: string | null
+          created_at?: string
+          id?: string
+          industry_label?: string | null
+          municipality?: string | null
+          org_number: string
+          phone_number?: string | null
+          phone_status?: Database["public"]["Enums"]["phone_status"]
+          postal_code?: string | null
+          registration_date?: string | null
+          sni_code?: string | null
+          source_primary?: string | null
+          updated_at?: string
+          website_status?: Database["public"]["Enums"]["website_status"]
+          website_url?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_form?: string | null
+          company_name?: string
+          county?: string | null
+          created_at?: string
+          id?: string
+          industry_label?: string | null
+          municipality?: string | null
+          org_number?: string
+          phone_number?: string | null
+          phone_status?: Database["public"]["Enums"]["phone_status"]
+          postal_code?: string | null
+          registration_date?: string | null
+          sni_code?: string | null
+          source_primary?: string | null
+          updated_at?: string
+          website_status?: Database["public"]["Enums"]["website_status"]
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      imports: {
+        Row: {
+          created_at: string
+          file_name: string
+          id: string
+          imported_rows: number | null
+          source_name: string | null
+          status: Database["public"]["Enums"]["import_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          id?: string
+          imported_rows?: number | null
+          source_name?: string | null
+          status?: Database["public"]["Enums"]["import_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          id?: string
+          imported_rows?: number | null
+          source_name?: string | null
+          status?: Database["public"]["Enums"]["import_status"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          note_text: string
+          user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          note_text: string
+          user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          note_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_filters: {
+        Row: {
+          created_at: string
+          filter_json: Json
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filter_json?: Json
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filter_json?: Json
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +174,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      import_status: "pending" | "processing" | "completed" | "failed"
+      phone_status: "has_phone" | "missing" | "unknown"
+      website_status:
+        | "has_website"
+        | "social_only"
+        | "no_website_found"
+        | "unknown"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +307,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      import_status: ["pending", "processing", "completed", "failed"],
+      phone_status: ["has_phone", "missing", "unknown"],
+      website_status: [
+        "has_website",
+        "social_only",
+        "no_website_found",
+        "unknown",
+      ],
+    },
   },
 } as const
