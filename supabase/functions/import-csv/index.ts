@@ -170,8 +170,12 @@ Deno.serve(async (req) => {
         if (!record.website_status || record.website_status === 'unknown') {
           record.website_status = detectWebsiteStatus(record.website_url);
         }
-        if (!record.phone_status) record.phone_status = 'unknown';
+        // Auto-detect phone_status from phone_number
+        if (!record.phone_status || record.phone_status === 'unknown') {
+          record.phone_status = detectPhoneStatus(record.phone_number);
+        }
         if (!record.source_primary) record.source_primary = 'CSV Import';
+        record.source_provider = 'csv_upload';
 
         mapped.push(record);
       }
