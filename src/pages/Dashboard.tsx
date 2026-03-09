@@ -35,16 +35,23 @@ export default function Dashboard() {
   const [runningAlerts, setRunningAlerts] = useState(false);
 
   useEffect(() => {
-    Promise.all([
+    const promises: Promise<any>[] = [
       fetchDashboardStats(),
       fetchLatestEvents({ limit: 20 }),
       fetchTodayEventCounts(),
-    ]).then(([s, e, c]) => {
+    ];
+    if (user) {
+      promises.push(fetchRecentAlertRuns(user.id, 10));
+      promises.push(fetchTodayAlertSummary(user.id));
+    }
+    Promise.all(promises).then(([s, e, c, ar, as_]) => {
       setStats(s);
       setEvents(e);
       setEventCounts(c);
+      if (ar) setAlertRuns(ar);
+      if (as_) setAlertSummary(as_);
     }).finally(() => setLoading(false));
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!loading) {
