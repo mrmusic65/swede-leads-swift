@@ -26,6 +26,26 @@ export default function Leads() {
   const [showFilters, setShowFilters] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
+  const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+
+  // Check for highlighted import IDs on mount
+  useEffect(() => {
+    const stored = sessionStorage.getItem('highlight_import_ids');
+    if (stored) {
+      try {
+        const ids: string[] = JSON.parse(stored);
+        setHighlightIds(new Set(ids));
+        // Clear after 10 seconds
+        const timer = setTimeout(() => {
+          setHighlightIds(new Set());
+          sessionStorage.removeItem('highlight_import_ids');
+        }, 10000);
+        return () => clearTimeout(timer);
+      } catch {
+        sessionStorage.removeItem('highlight_import_ids');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     Promise.all([fetchDistinctCities(), fetchDistinctIndustries()]).then(([c, i]) => { setCities(c); setIndustries(i); });
