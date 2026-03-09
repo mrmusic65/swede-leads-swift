@@ -601,12 +601,48 @@ Deno.serve(async (req) => {
         }
 
         const record = buildInsertRecord(company, provider.name);
-        const { error } = await supabase.from("companies").insert(record);
+        const { data: inserted, error } = await supabase.from("companies").insert(record).select("id").single();
         if (error) {
           console.error(`[daily-import][${provider.name}] Insert error for ${company.company_name}:`, error.message);
           provSkipped++;
         } else {
           provImported++;
+          // Emit company_registered event
+          const events: any[] = [
+            {
+              company_id: inserted.id,
+              event_type: "company_registered",
+              event_date: company.registration_date || new Date().toISOString().split("T")[0],
+              event_source: provider.name,
+              event_label: `${company.company_name} registrerades`,
+              event_payload: { org_number: company.org_number, city: company.city, industry_label: company.industry_label },
+            },
+          ];
+          // Additional events based on enrichment fields
+          if (company.vat_registered) {
+            events.push({
+              company_id: inserted.id, event_type: "vat_registered",
+              event_date: company.registration_date || new Date().toISOString().split("T")[0],
+              event_source: provider.name, event_label: `${company.company_name} momsregistrerades`,
+            });
+          }
+          if (company.f_tax_registered) {
+            events.push({
+              company_id: inserted.id, event_type: "f_tax_registered",
+              event_date: company.registration_date || new Date().toISOString().split("T")[0],
+              event_source: provider.name, event_label: `${company.company_name} fick F-skattsedel`,
+            });
+          }
+          if (company.employer_registered) {
+            events.push({
+              company_id: inserted.id, event_type: "employer_registered",
+              event_date: company.registration_date || new Date().toISOString().split("T")[0],
+              event_source: provider.name, event_label: `${company.company_name} registrerades som arbetsgivare`,
+            });
+          }
+          await supabase.from("company_events").insert(events).then(({ error: evErr }) => {
+            if (evErr) console.error(`[daily-import][${provider.name}] Event insert error:`, evErr.message);
+          });
         }
       }
     } catch (err) {

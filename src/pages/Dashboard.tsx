@@ -1,21 +1,51 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchDashboardStats } from '@/lib/api';
-import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock, Star, ArrowRight } from 'lucide-react';
+import { fetchDashboardStats, fetchLatestEvents, fetchTodayEventCounts, type CompanyEvent } from '@/lib/api';
+import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock, Star, ArrowRight, Zap, Activity, FileCheck, Briefcase } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ScoreBadge from '@/components/ScoreBadge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
 import PhoneStatusBadge from '@/components/PhoneStatusBadge';
 
+const EVENT_TYPE_META: Record<string, { label: string; icon: typeof Zap; className: string }> = {
+  company_registered: { label: 'Nyregistrerat', icon: Building2, className: 'bg-primary/10 text-primary' },
+  vat_registered: { label: 'Momsregistrerat', icon: FileCheck, className: 'bg-success/10 text-success' },
+  f_tax_registered: { label: 'F-skatt', icon: FileCheck, className: 'bg-warning/10 text-warning' },
+  employer_registered: { label: 'Arbetsgivare', icon: Briefcase, className: 'bg-accent/20 text-accent-foreground' },
+  address_changed: { label: 'Adressändring', icon: MapPin, className: 'bg-secondary text-secondary-foreground' },
+  industry_changed: { label: 'Branschändring', icon: BarChart3, className: 'bg-secondary text-secondary-foreground' },
+};
+
 export default function Dashboard() {
   const [stats, setStats] = useState<Awaited<ReturnType<typeof fetchDashboardStats>> | null>(null);
+  const [events, setEvents] = useState<CompanyEvent[]>([]);
+  const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
+  const [eventFilter, setEventFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchDashboardStats().then(setStats).finally(() => setLoading(false));
+    Promise.all([
+      fetchDashboardStats(),
+      fetchLatestEvents({ limit: 20 }),
+      fetchTodayEventCounts(),
+    ]).then(([s, e, c]) => {
+      setStats(s);
+      setEvents(e);
+      setEventCounts(c);
+    }).finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      fetchLatestEvents({ limit: 20, event_type: eventFilter === 'all' ? undefined : eventFilter })
+        .then(setEvents)
+        .catch(console.error);
+    }
+  }, [eventFilter]);
 
   if (loading) {
     return (
@@ -38,11 +68,15 @@ export default function Dashboard() {
     { label: 'Har telefonnummer', value: stats.hasPhone, icon: Phone, color: 'text-success' },
   ];
 
+  const totalEventsToday = Object.values(eventCounts).reduce((a, b) => a + b, 0);
+
+  const filteredEvents = events;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">Översikt över svenska leads</p>
+        <p className="text-sm text-muted-foreground mt-1">Trigger intelligence för svenska bolag</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -62,6 +96,37 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Business opportunities today */}
+      <Card className="border-warning/30 bg-warning/[0.03]">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Zap className="w-4 h-4 text-warning" />
+              Affärsmöjligheter idag
+            </CardTitle>
+            <span className="text-xs text-muted-foreground">{totalEventsToday} händelser idag</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Nyregistreringar och statusändringar från svenska datakällor</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+            {Object.entries(EVENT_TYPE_META).map(([type, meta]) => {
+              const count = eventCounts[type] || 0;
+              const Icon = meta.icon;
+              return (
+                <div key={type} className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-background border">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${meta.className}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <span className="text-lg font-bold">{count}</span>
+                  <span className="text-[10px] text-muted-foreground text-center leading-tight">{meta.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Featured: Best website prospects */}
       {stats.bestWebsiteProspects.length > 0 && (
@@ -103,6 +168,65 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Latest company events */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" />
+              Senaste bolagshändelser
+            </CardTitle>
+            <Select value={eventFilter} onValueChange={setEventFilter}>
+              <SelectTrigger className="w-[180px] h-8 text-xs">
+                <SelectValue placeholder="Alla händelser" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alla händelser</SelectItem>
+                {Object.entries(EVENT_TYPE_META).map(([type, meta]) => (
+                  <SelectItem key={type} value={type}>{meta.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {filteredEvents.length === 0 && (
+            <p className="text-sm text-muted-foreground py-4 text-center">Inga händelser ännu. Kör en import för att generera händelser.</p>
+          )}
+          <div className="space-y-2">
+            {filteredEvents.map(ev => {
+              const meta = EVENT_TYPE_META[ev.event_type] || { label: ev.event_type, icon: Zap, className: 'bg-secondary text-secondary-foreground' };
+              const Icon = meta.icon;
+              const companyName = (ev.companies as any)?.company_name || 'Okänt bolag';
+              const companyId = (ev.companies as any)?.id;
+              return (
+                <div key={ev.id} className="flex items-center gap-3 py-2 border-b last:border-0">
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${meta.className}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      {companyId ? (
+                        <Link to={`/leads/${companyId}`} className="text-sm font-medium hover:text-primary transition-colors truncate">
+                          {companyName}
+                        </Link>
+                      ) : (
+                        <span className="text-sm font-medium truncate">{companyName}</span>
+                      )}
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{meta.label}</Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                      {ev.event_label || meta.label}
+                    </p>
+                  </div>
+                  <span className="text-xs text-muted-foreground shrink-0">{ev.event_date}</span>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4">
         <Card>
