@@ -60,7 +60,11 @@ export async function fetchCompanies(filters: LeadFilters = {}) {
   }
   if (filters.city) query = query.eq('city', filters.city);
   if (filters.county) query = query.eq('county', filters.county);
-  if (filters.website_status) query = query.eq('website_status', filters.website_status as any);
+  if (filters.website_statuses && filters.website_statuses.length > 0) {
+    query = query.in('website_status', filters.website_statuses as any);
+  } else if (filters.website_status) {
+    query = query.eq('website_status', filters.website_status as any);
+  }
   if (filters.phone_status) query = query.eq('phone_status', filters.phone_status as any);
   if (filters.industry_label) query = query.eq('industry_label', filters.industry_label);
   if (filters.registeredAfter) query = query.gte('registration_date', filters.registeredAfter);
