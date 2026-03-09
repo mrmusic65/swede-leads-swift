@@ -312,7 +312,7 @@ export default function Dashboard() {
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{meta.label}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {ev.event_label || meta.label}
+                      {(ev.companies as any)?.city ? `${(ev.companies as any).city} · ` : ''}{ev.event_label || meta.label}
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">{ev.event_date}</span>
