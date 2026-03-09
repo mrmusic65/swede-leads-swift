@@ -26,6 +26,26 @@ export default function Leads() {
   const [showFilters, setShowFilters] = useState(false);
   const [cities, setCities] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
+  const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+
+  // Check for highlighted import IDs on mount
+  useEffect(() => {
+    const stored = sessionStorage.getItem('highlight_import_ids');
+    if (stored) {
+      try {
+        const ids: string[] = JSON.parse(stored);
+        setHighlightIds(new Set(ids));
+        // Clear after 10 seconds
+        const timer = setTimeout(() => {
+          setHighlightIds(new Set());
+          sessionStorage.removeItem('highlight_import_ids');
+        }, 10000);
+        return () => clearTimeout(timer);
+      } catch {
+        sessionStorage.removeItem('highlight_import_ids');
+      }
+    }
+  }, []);
 
   useEffect(() => {
     Promise.all([fetchDistinctCities(), fetchDistinctIndustries()]).then(([c, i]) => { setCities(c); setIndustries(i); });
@@ -63,6 +83,17 @@ export default function Leads() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {highlightIds.size > 0 && (
+        <div className="bg-accent border border-primary/20 rounded-lg px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-accent-foreground">
+            <span className="font-semibold">{highlightIds.size} nya leads</span> importerade och markerade nedan
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => { setHighlightIds(new Set()); sessionStorage.removeItem('highlight_import_ids'); }}>
+            <X className="w-3 h-3 mr-1" /> Stäng
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
@@ -161,8 +192,15 @@ export default function Leads() {
                 <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Inga bolag hittades.</td></tr>
               ) : (
                 companies.map(c => (
-                  <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium">{c.company_name}</td>
+                  <tr key={c.id} className={`border-b last:border-0 transition-colors ${
+                    highlightIds.has(c.id)
+                      ? 'bg-accent/50 animate-fade-in'
+                      : 'hover:bg-muted/30'
+                  }`}>
+                    <td className="px-4 py-3 font-medium">
+                      {highlightIds.has(c.id) && <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-2" />}
+                      {c.company_name}
+                    </td>
                     <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">{c.city}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">{c.registration_date}</td>
                     <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">{c.industry_label}</td>
