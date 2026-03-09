@@ -8,6 +8,15 @@ const corsHeaders = {
 const VALID_WEBSITE_STATUSES = ['has_website', 'social_only', 'no_website_found', 'unknown'];
 const VALID_PHONE_STATUSES = ['has_phone', 'missing', 'unknown'];
 
+const SOCIAL_DOMAINS = ['facebook.com', 'instagram.com', 'linktr.ee', 'bokadirekt.se'];
+
+function detectWebsiteStatus(url: string | null | undefined): string {
+  if (!url || !url.trim()) return 'no_website_found';
+  const lower = url.toLowerCase();
+  if (SOCIAL_DOMAINS.some(d => lower.includes(d))) return 'social_only';
+  return 'has_website';
+}
+
 const DB_FIELDS = [
   'company_name', 'org_number', 'registration_date', 'company_form',
   'sni_code', 'industry_label', 'address', 'postal_code', 'city',
