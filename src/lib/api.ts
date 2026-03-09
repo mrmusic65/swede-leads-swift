@@ -242,7 +242,7 @@ export async function fetchLatestEvents(filters: EventFilters = {}): Promise<Com
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (filters.event_type) query = query.eq('event_type', filters.event_type);
+  if (filters.event_type) query = query.eq('event_type', filters.event_type as any);
   if (filters.dateFrom) query = query.gte('event_date', filters.dateFrom);
   if (filters.dateTo) query = query.lte('event_date', filters.dateTo);
 
