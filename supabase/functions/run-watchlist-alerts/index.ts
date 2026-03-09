@@ -68,6 +68,12 @@ Deno.serve(async (req) => {
       if (filters.phone_status) companyQuery = companyQuery.eq("phone_status", filters.phone_status);
       if (filters.registeredAfter) companyQuery = companyQuery.gte("registration_date", filters.registeredAfter);
       if (filters.registeredBefore) companyQuery = companyQuery.lte("registration_date", filters.registeredBefore);
+      if (filters.f_tax_registered === "true") companyQuery = companyQuery.eq("f_tax_registered", true);
+      if (filters.f_tax_registered === "false") companyQuery = companyQuery.eq("f_tax_registered", false);
+      if (filters.vat_registered === "true") companyQuery = companyQuery.eq("vat_registered", true);
+      if (filters.vat_registered === "false") companyQuery = companyQuery.eq("vat_registered", false);
+      if (filters.employer_registered === "true") companyQuery = companyQuery.eq("employer_registered", true);
+      if (filters.employer_registered === "false") companyQuery = companyQuery.eq("employer_registered", false);
 
       const { count: companyCount } = await companyQuery;
 
