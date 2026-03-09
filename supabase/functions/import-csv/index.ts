@@ -24,9 +24,11 @@ function detectPhoneStatus(phone: string | null | undefined): string {
 
 const DB_FIELDS = [
   'company_name', 'org_number', 'registration_date', 'company_form',
-  'sni_code', 'industry_label', 'address', 'postal_code', 'city',
+  'sni_code', 'industry_label', 'industry_group', 'address', 'postal_code', 'city',
   'municipality', 'county', 'website_url', 'website_status',
   'phone_number', 'phone_status', 'source_primary',
+  'vat_registered', 'f_tax_registered', 'employer_registered',
+  'employees_estimate',
 ] as const;
 
 function sanitizeText(val: string | undefined | null, maxLen = 500): string | null {
