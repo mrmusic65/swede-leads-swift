@@ -32,13 +32,21 @@ export interface LeadFilters {
   pageSize?: number;
 }
 
+// Sanitize search input — strip characters that could break PostgREST filter syntax
+function sanitizeSearch(input: string): string {
+  return input.replace(/[%_'"\\(),.]/g, '').trim().slice(0, 100);
+}
+
 export async function fetchCompanies(filters: LeadFilters = {}) {
   const { page = 1, pageSize = 30, sortBy = 'created_at', sortDir = 'desc' } = filters;
   
   let query = supabase.from('companies').select('*', { count: 'exact' });
 
   if (filters.search) {
-    query = query.or(`company_name.ilike.%${filters.search}%,city.ilike.%${filters.search}%,industry_label.ilike.%${filters.search}%,org_number.ilike.%${filters.search}%`);
+    const safe = sanitizeSearch(filters.search);
+    if (safe) {
+      query = query.or(`company_name.ilike.%${safe}%,city.ilike.%${safe}%,industry_label.ilike.%${safe}%,org_number.ilike.%${safe}%`);
+    }
   }
   if (filters.city) query = query.eq('city', filters.city);
   if (filters.county) query = query.eq('county', filters.county);
@@ -46,8 +54,12 @@ export async function fetchCompanies(filters: LeadFilters = {}) {
   if (filters.phone_status) query = query.eq('phone_status', filters.phone_status as any);
   if (filters.industry_label) query = query.eq('industry_label', filters.industry_label);
 
+  // Validate sortBy to prevent injection
+  const allowedSorts = ['registration_date', 'company_name', 'created_at'] as const;
+  const safeSortBy = allowedSorts.includes(sortBy as any) ? sortBy : 'created_at';
+
   const from = (page - 1) * pageSize;
-  query = query.order(sortBy, { ascending: sortDir === 'asc' }).range(from, from + pageSize - 1);
+  query = query.order(safeSortBy, { ascending: sortDir === 'asc' }).range(from, from + pageSize - 1);
 
   const { data, error, count } = await query;
   if (error) throw error;
@@ -55,19 +67,28 @@ export async function fetchCompanies(filters: LeadFilters = {}) {
 }
 
 export async function fetchCompanyById(id: string) {
+  // Validate UUID format
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error('Invalid company ID');
+  }
   const { data, error } = await supabase.from('companies').select('*').eq('id', id).single();
   if (error) throw error;
   return data;
 }
 
 export async function fetchNotes(companyId: string) {
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(companyId)) {
+    throw new Error('Invalid company ID');
+  }
   const { data, error } = await supabase.from('notes').select('*').eq('company_id', companyId).order('created_at', { ascending: true });
   if (error) throw error;
   return data ?? [];
 }
 
 export async function addNote(companyId: string, userId: string, noteText: string) {
-  const { data, error } = await supabase.from('notes').insert({ company_id: companyId, user_id: userId, note_text: noteText }).select().single();
+  const trimmed = noteText.trim().slice(0, 5000);
+  if (!trimmed) throw new Error('Note text is required');
+  const { data, error } = await supabase.from('notes').insert({ company_id: companyId, user_id: userId, note_text: trimmed }).select().single();
   if (error) throw error;
   return data;
 }
@@ -121,43 +142,13 @@ export async function fetchDistinctIndustries(): Promise<string[]> {
   return [...new Set(data.map(d => d.industry_label!))].sort();
 }
 
-export async function importCompaniesFromCSV(rows: Record<string, string>[], userId: string, fileName: string) {
-  // Create import record
-  const { data: importRecord, error: importError } = await supabase
-    .from('imports')
-    .insert({ user_id: userId, file_name: fileName, source_name: 'CSV', status: 'processing' as const })
-    .select()
-    .single();
-  if (importError) throw importError;
-
-  const mapped = rows.map(row => ({
-    company_name: row.company_name || row.namn || '',
-    org_number: row.org_number || row.organisationsnummer || '',
-    registration_date: row.registration_date || row.registreringsdatum || null,
-    company_form: row.company_form || row.bolagsform || null,
-    sni_code: row.sni_code || row.sni_kod || null,
-    industry_label: row.industry_label || row.bransch || null,
-    address: row.address || row.adress || null,
-    postal_code: row.postal_code || row.postnummer || null,
-    city: row.city || row.stad || row.ort || null,
-    municipality: row.municipality || row.kommun || null,
-    county: row.county || row.lan || null,
-    website_url: row.website_url || row.hemsida || null,
-    website_status: (['has_website', 'social_only', 'no_website_found', 'unknown'].includes(row.website_status) ? row.website_status : 'unknown') as any,
-    phone_number: row.phone_number || row.telefon || null,
-    phone_status: (['has_phone', 'missing', 'unknown'].includes(row.phone_status) ? row.phone_status : 'unknown') as any,
-    source_primary: row.source_primary || 'CSV Import',
-  })).filter(r => r.company_name && r.org_number);
-
-  const { error: insertError } = await supabase.from('companies').insert(mapped);
-  
-  await supabase.from('imports').update({
-    status: insertError ? 'failed' as const : 'completed' as const,
-    imported_rows: insertError ? 0 : mapped.length,
-  }).eq('id', importRecord.id);
-
-  if (insertError) throw insertError;
-  return mapped.length;
+export async function importCompaniesFromCSV(csvText: string, fileName: string) {
+  const { data, error } = await supabase.functions.invoke('import-csv', {
+    body: { csv_text: csvText, file_name: fileName },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data.imported as number;
 }
 
 export async function exportCompaniesCSV(filters: LeadFilters = {}) {
@@ -171,7 +162,7 @@ export async function exportCompaniesCSV(filters: LeadFilters = {}) {
       const val = (c as any)[h];
       if (val == null) return '';
       const str = String(val);
-      return str.includes(',') || str.includes('"') ? `"${str.replace(/"/g, '""')}"` : str;
+      return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
     });
     csvRows.push(row.join(','));
   });
