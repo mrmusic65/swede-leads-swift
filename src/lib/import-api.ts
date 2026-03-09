@@ -38,6 +38,11 @@ export const DB_FIELDS: { key: string; label: string; required: boolean }[] = [
   { key: 'phone_number', label: 'Telefonnummer', required: false },
   { key: 'phone_status', label: 'Telefonstatus', required: false },
   { key: 'source_primary', label: 'Källa', required: false },
+  { key: 'vat_registered', label: 'Momsregistrerad', required: false },
+  { key: 'f_tax_registered', label: 'F-skatt', required: false },
+  { key: 'employer_registered', label: 'Arbetsgivare', required: false },
+  { key: 'industry_group', label: 'Branschgrupp', required: false },
+  { key: 'employees_estimate', label: 'Antal anställda', required: false },
 ];
 
 // Auto-map CSV headers to DB fields based on common names
