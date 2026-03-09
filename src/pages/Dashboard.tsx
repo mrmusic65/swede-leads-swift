@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchDashboardStats } from '@/lib/api';
-import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock } from 'lucide-react';
+import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock, Star, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import ScoreBadge from '@/components/ScoreBadge';
+import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
+import PhoneStatusBadge from '@/components/PhoneStatusBadge';
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Awaited<ReturnType<typeof fetchDashboardStats>> | null>(null);
