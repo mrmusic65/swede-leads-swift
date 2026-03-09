@@ -18,11 +18,16 @@ export type Database = {
         Row: {
           address: string | null
           city: string | null
+          company_age_days: number | null
           company_form: string | null
           company_name: string
           county: string | null
           created_at: string
+          employees_estimate: string | null
+          employer_registered: boolean | null
+          f_tax_registered: boolean | null
           id: string
+          industry_group: string | null
           industry_label: string | null
           municipality: string | null
           org_number: string | null
@@ -34,17 +39,23 @@ export type Database = {
           source_primary: string | null
           source_provider: string | null
           updated_at: string
+          vat_registered: boolean | null
           website_status: Database["public"]["Enums"]["website_status"]
           website_url: string | null
         }
         Insert: {
           address?: string | null
           city?: string | null
+          company_age_days?: number | null
           company_form?: string | null
           company_name: string
           county?: string | null
           created_at?: string
+          employees_estimate?: string | null
+          employer_registered?: boolean | null
+          f_tax_registered?: boolean | null
           id?: string
+          industry_group?: string | null
           industry_label?: string | null
           municipality?: string | null
           org_number?: string | null
@@ -56,17 +67,23 @@ export type Database = {
           source_primary?: string | null
           source_provider?: string | null
           updated_at?: string
+          vat_registered?: boolean | null
           website_status?: Database["public"]["Enums"]["website_status"]
           website_url?: string | null
         }
         Update: {
           address?: string | null
           city?: string | null
+          company_age_days?: number | null
           company_form?: string | null
           company_name?: string
           county?: string | null
           created_at?: string
+          employees_estimate?: string | null
+          employer_registered?: boolean | null
+          f_tax_registered?: boolean | null
           id?: string
+          industry_group?: string | null
           industry_label?: string | null
           municipality?: string | null
           org_number?: string | null
@@ -78,6 +95,7 @@ export type Database = {
           source_primary?: string | null
           source_provider?: string | null
           updated_at?: string
+          vat_registered?: boolean | null
           website_status?: Database["public"]["Enums"]["website_status"]
           website_url?: string | null
         }
