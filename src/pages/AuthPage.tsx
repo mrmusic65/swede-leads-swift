@@ -25,7 +25,7 @@ export default function AuthPage() {
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
-        toast({ title: 'Konto skapat!', description: 'Kolla din e-post för att verifiera kontot.' });
+        toast({ title: 'Konto skapat!', description: 'Du är nu inloggad.' });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
