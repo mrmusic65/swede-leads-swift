@@ -212,6 +212,59 @@ export async function fetchDashboardStats() {
   };
 }
 
+// ── Company Events API ──
+
+export interface CompanyEvent {
+  id: string;
+  company_id: string;
+  event_type: string;
+  event_date: string;
+  event_source: string | null;
+  event_label: string | null;
+  event_payload: any;
+  created_at: string;
+  companies?: { id: string; company_name: string; city: string | null } | null;
+}
+
+export interface EventFilters {
+  event_type?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  limit?: number;
+}
+
+export async function fetchLatestEvents(filters: EventFilters = {}): Promise<CompanyEvent[]> {
+  const limit = filters.limit || 15;
+  let query = supabase
+    .from('company_events')
+    .select('*, companies(id, company_name, city)')
+    .order('event_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (filters.event_type) query = query.eq('event_type', filters.event_type);
+  if (filters.dateFrom) query = query.gte('event_date', filters.dateFrom);
+  if (filters.dateTo) query = query.lte('event_date', filters.dateTo);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as CompanyEvent[];
+}
+
+export async function fetchTodayEventCounts(): Promise<Record<string, number>> {
+  const today = new Date().toISOString().split('T')[0];
+  const { data, error } = await supabase
+    .from('company_events')
+    .select('event_type')
+    .gte('event_date', today);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  (data ?? []).forEach(e => {
+    counts[e.event_type] = (counts[e.event_type] || 0) + 1;
+  });
+  return counts;
+}
+
 export async function fetchDistinctCities(): Promise<string[]> {
   const { data } = await supabase.from('companies').select('city').not('city', 'is', null);
   if (!data) return [];

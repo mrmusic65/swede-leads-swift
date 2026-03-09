@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
         toInsert.push(r);
       }
 
-      // Insert in batches
+      // Insert in batches and emit company_registered events
       let totalInserted = 0;
       const insertedIds: string[] = [];
 
@@ -257,14 +257,29 @@ Deno.serve(async (req) => {
         const { data: inserted, error: insertError } = await supabase
           .from('companies')
           .insert(batch)
-          .select('id');
+          .select('id, company_name, registration_date, city, industry_label');
 
         if (insertError) {
           console.error('Batch insert error:', insertError);
           continue;
         }
         totalInserted += (inserted?.length || 0);
-        inserted?.forEach(r => insertedIds.push(r.id));
+        
+        // Emit company_registered events for each inserted company
+        if (inserted && inserted.length > 0) {
+          const events = inserted.map(r => ({
+            company_id: r.id,
+            event_type: 'company_registered' as const,
+            event_date: r.registration_date || new Date().toISOString().split('T')[0],
+            event_source: 'csv_upload',
+            event_label: `${r.company_name} registrerades`,
+            event_payload: { city: r.city, industry_label: r.industry_label },
+          }));
+          await supabase.from('company_events').insert(events).then(({ error: evErr }) => {
+            if (evErr) console.error('Event insert error:', evErr);
+          });
+          inserted.forEach(r => insertedIds.push(r.id));
+        }
       }
 
       const finalStatus = totalInserted > 0 ? 'completed' : 'failed';
