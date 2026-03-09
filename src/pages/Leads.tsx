@@ -134,6 +134,7 @@ export default function Leads() {
       website_statuses: undefined,
       phone_status: undefined,
       registeredAfter: undefined,
+      minScore: undefined,
       page: 1,
     }));
   };
