@@ -64,7 +64,7 @@ export default function AuthPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Laddar...' : isSignUp ? 'Skapa konto' : 'Logga in'}
