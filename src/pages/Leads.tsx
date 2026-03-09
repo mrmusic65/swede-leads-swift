@@ -7,6 +7,7 @@ import PhoneStatusBadge from '@/components/PhoneStatusBadge';
 import LeadFiltersPanel from '@/components/LeadFiltersPanel';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -14,12 +15,34 @@ import { Search, SlidersHorizontal, ExternalLink, X, ChevronLeft, ChevronRight, 
 
 const PAGE_SIZE = 30;
 
+function exportSelectedCSV(companies: Company[]) {
+  const headers = ['company_name', 'org_number', 'registration_date', 'company_form', 'industry_label', 'address', 'postal_code', 'city', 'municipality', 'county', 'website_url', 'website_status', 'phone_number', 'phone_status', 'source_primary'];
+  const csvRows = [headers.join(',')];
+  companies.forEach(c => {
+    const row = headers.map(h => {
+      const val = (c as any)[h];
+      if (val == null) return '';
+      const str = String(val);
+      return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
+    });
+    csvRows.push(row.join(','));
+  });
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `leads-selected-${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function Leads() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [highlightIds, setHighlightIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const [filters, setFilters] = useState<LeadFilters>({
     sortBy: 'created_at',
@@ -52,6 +75,9 @@ export default function Leads() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Clear selection when page/filters change
+  useEffect(() => { setSelectedIds(new Set()); }, [filters.page, filters.city, filters.county, filters.website_status, filters.phone_status, filters.industry_label, filters.search]);
+
   const updateFilters = (partial: Partial<LeadFilters>) => {
     setFilters(prev => ({ ...prev, ...partial, page: partial.page ?? 1 }));
   };
@@ -60,9 +86,31 @@ export default function Leads() {
     setFilters({ sortBy: filters.sortBy, sortDir: filters.sortDir, page: 1, pageSize: PAGE_SIZE, search: filters.search });
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === companies.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(companies.map(c => c.id)));
+    }
+  };
+
+  const handleExportSelected = () => {
+    const selected = companies.filter(c => selectedIds.has(c.id));
+    if (selected.length > 0) exportSelectedCSV(selected);
+  };
+
   const page = filters.page ?? 1;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
   const sortBy = filters.sortBy ?? 'created_at';
+  const allSelected = companies.length > 0 && selectedIds.size === companies.length;
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -82,9 +130,16 @@ export default function Leads() {
           <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
           <p className="text-sm text-muted-foreground mt-1">{totalCount} bolag</p>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportCompaniesCSV(filters)}>
-          <Download className="w-3.5 h-3.5" /> Exportera
-        </Button>
+        <div className="flex gap-2">
+          {selectedIds.size > 0 && (
+            <Button variant="default" size="sm" className="gap-1.5" onClick={handleExportSelected}>
+              <Download className="w-3.5 h-3.5" /> Exportera {selectedIds.size} valda
+            </Button>
+          )}
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={() => exportCompaniesCSV(filters)}>
+            <Download className="w-3.5 h-3.5" /> Exportera alla
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -115,6 +170,9 @@ export default function Leads() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
+                <th className="px-4 py-3 w-10">
+                  <Checkbox checked={allSelected} onCheckedChange={toggleSelectAll} aria-label="Markera alla" />
+                </th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Bolag</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden sm:table-cell">Stad</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Reg. datum</th>
@@ -129,16 +187,20 @@ export default function Leads() {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b">
-                    <td colSpan={8} className="px-4 py-3"><Skeleton className="h-5 w-full" /></td>
+                    <td colSpan={9} className="px-4 py-3"><Skeleton className="h-5 w-full" /></td>
                   </tr>
                 ))
               ) : companies.length === 0 ? (
-                <tr><td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">Inga bolag hittades.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">Inga bolag hittades.</td></tr>
               ) : (
                 companies.map(c => {
                   const score = '_score' in c ? (c as any)._score : calculateLeadScore(c);
+                  const isSelected = selectedIds.has(c.id);
                   return (
-                    <tr key={c.id} className={`border-b last:border-0 transition-colors ${highlightIds.has(c.id) ? 'bg-accent/50 animate-fade-in' : 'hover:bg-muted/30'}`}>
+                    <tr key={c.id} className={`border-b last:border-0 transition-colors ${highlightIds.has(c.id) ? 'bg-accent/50 animate-fade-in' : isSelected ? 'bg-primary/5' : 'hover:bg-muted/30'}`}>
+                      <td className="px-4 py-3">
+                        <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(c.id)} aria-label={`Markera ${c.company_name}`} />
+                      </td>
                       <td className="px-4 py-3 font-medium">
                         {highlightIds.has(c.id) && <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary mr-2" />}
                         {c.company_name}
