@@ -83,27 +83,39 @@ export type Database = {
       imports: {
         Row: {
           created_at: string
+          duplicate_rows: number | null
+          error_message: string | null
+          fetched_rows: number | null
           file_name: string
           id: string
           imported_rows: number | null
+          skipped_rows: number | null
           source_name: string | null
           status: Database["public"]["Enums"]["import_status"]
           user_id: string
         }
         Insert: {
           created_at?: string
+          duplicate_rows?: number | null
+          error_message?: string | null
+          fetched_rows?: number | null
           file_name: string
           id?: string
           imported_rows?: number | null
+          skipped_rows?: number | null
           source_name?: string | null
           status?: Database["public"]["Enums"]["import_status"]
           user_id: string
         }
         Update: {
           created_at?: string
+          duplicate_rows?: number | null
+          error_message?: string | null
+          fetched_rows?: number | null
           file_name?: string
           id?: string
           imported_rows?: number | null
+          skipped_rows?: number | null
           source_name?: string | null
           status?: Database["public"]["Enums"]["import_status"]
           user_id?: string

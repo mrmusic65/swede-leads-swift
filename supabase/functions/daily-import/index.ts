@@ -65,10 +65,23 @@ Deno.serve(async (req) => {
     );
 
     const companies = await fetchFromExternalAPI();
+    const fetched = companies.length;
 
-    if (companies.length === 0) {
+    if (fetched === 0) {
+      // Log even empty runs for visibility
+      await supabase.from("imports").insert({
+        file_name: `daily-import-${new Date().toISOString().split("T")[0]}`,
+        user_id: "00000000-0000-0000-0000-000000000000",
+        imported_rows: 0,
+        fetched_rows: 0,
+        skipped_rows: 0,
+        duplicate_rows: 0,
+        status: "completed",
+        source_name: "daily-import",
+      });
+
       return new Response(
-        JSON.stringify({ success: true, message: "No new companies from API", imported: 0, skipped: 0, duplicates: 0 }),
+        JSON.stringify({ success: true, message: "No new companies from API", imported: 0, skipped: 0, duplicates: 0, total: 0 }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -83,7 +96,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Check for duplicates: org_number first, fallback to company_name + city
       let isDuplicate = false;
 
       if (company.org_number) {
@@ -94,7 +106,6 @@ Deno.serve(async (req) => {
           .limit(1);
         if (existing && existing.length > 0) isDuplicate = true;
       } else {
-        // Fallback: company_name + city
         let q = supabase
           .from("companies")
           .select("id")
@@ -136,24 +147,40 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Log import
+    // Log import with full details
     await supabase.from("imports").insert({
       file_name: `daily-import-${new Date().toISOString().split("T")[0]}`,
       user_id: "00000000-0000-0000-0000-000000000000",
       imported_rows: imported,
+      fetched_rows: fetched,
+      skipped_rows: skipped,
+      duplicate_rows: duplicates,
       status: "completed",
       source_name: "daily-import",
     }).then(({ error }) => {
       if (error) console.error("[daily-import] Failed to log import:", error.message);
     });
 
-    const result = { success: true, imported, duplicates, skipped, total: companies.length };
+    const result = { success: true, imported, duplicates, skipped, total: fetched };
     console.log("[daily-import] Result:", JSON.stringify(result));
 
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (err) {
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    // Log failed import
+    await supabase.from("imports").insert({
+      file_name: `daily-import-${new Date().toISOString().split("T")[0]}`,
+      user_id: "00000000-0000-0000-0000-000000000000",
+      status: "failed",
+      source_name: "daily-import",
+      error_message: String(err),
+    }).catch(() => {});
+
     console.error("[daily-import] Error:", err);
     return new Response(
       JSON.stringify({ success: false, error: String(err) }),
