@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, Users, Upload, Download, Zap } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Upload, Download, Zap, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -12,6 +13,7 @@ const navItems = [
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { signOut, user } = useAuth();
 
   return (
     <div className="lg:hidden border-b border-border bg-card">
@@ -44,6 +46,15 @@ export default function MobileNav() {
               </Link>
             );
           })}
+          <div className="border-t border-border pt-2 mt-2">
+            {user && <p className="px-3 text-xs text-muted-foreground truncate mb-2">{user.email}</p>}
+            <button
+              onClick={() => { signOut(); setOpen(false); }}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors w-full"
+            >
+              <LogOut className="w-4 h-4" /> Logga ut
+            </button>
+          </div>
         </nav>
       )}
     </div>

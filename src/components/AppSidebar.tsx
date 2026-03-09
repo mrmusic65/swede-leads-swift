@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, Download, Settings, Zap } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, Download, Settings, Zap, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,6 +11,7 @@ const navItems = [
 
 export default function AppSidebar() {
   const location = useLocation();
+  const { signOut, user } = useAuth();
 
   return (
     <aside className="hidden lg:flex flex-col w-60 bg-sidebar border-r border-sidebar-border min-h-screen">
@@ -40,14 +42,17 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-sidebar-border">
-        <Link
-          to="/settings"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+      <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
+        {user && (
+          <p className="px-3 text-xs text-sidebar-foreground truncate mb-2">{user.email}</p>
+        )}
+        <button
+          onClick={signOut}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
         >
-          <Settings className="w-4 h-4" />
-          Inställningar
-        </Link>
+          <LogOut className="w-4 h-4" />
+          Logga ut
+        </button>
       </div>
     </aside>
   );

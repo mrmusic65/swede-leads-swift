@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { exportCompaniesCSV } from '@/lib/api';
 
 export default function ExportPage() {
   return (
@@ -13,9 +14,9 @@ export default function ExportPage() {
       <Card>
         <CardContent className="pt-6 space-y-4">
           <p className="text-sm text-muted-foreground">
-            Exportera alla leads baserat på dina aktiva filter. Filen innehåller all bolagsinformation, lead scores, och kontaktuppgifter.
+            Exportera alla leads. Filen innehåller all bolagsinformation, kontaktuppgifter och statusar.
           </p>
-          <Button className="gap-1.5">
+          <Button className="gap-1.5" onClick={() => exportCompaniesCSV()}>
             <Download className="w-4 h-4" /> Ladda ner CSV
           </Button>
         </CardContent>

@@ -1,17 +1,37 @@
-import { getDashboardStats } from '@/lib/mock-data';
+import { useEffect, useState } from 'react';
+import { fetchDashboardStats } from '@/lib/api';
 import { Building2, Globe, Share2, TrendingUp, BarChart3, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-const stats = getDashboardStats();
-
-const kpiCards = [
-  { label: 'Nya bolag (30 dagar)', value: stats.newLast30, icon: Building2, color: 'text-primary' },
-  { label: 'Utan hemsida', value: stats.noWebsite, icon: Globe, color: 'text-destructive' },
-  { label: 'Bara sociala medier', value: stats.socialOnly, icon: Share2, color: 'text-warning' },
-  { label: 'Högsta lead score', value: stats.highestScore, icon: TrendingUp, color: 'text-success' },
-];
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
+  const [stats, setStats] = useState<Awaited<ReturnType<typeof fetchDashboardStats>> | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats().then(setStats).finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div><h1 className="text-2xl font-bold tracking-tight">Dashboard</h1></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!stats) return null;
+
+  const kpiCards = [
+    { label: 'Nya bolag (30 dagar)', value: stats.newLast30, icon: Building2, color: 'text-primary' },
+    { label: 'Utan hemsida', value: stats.noWebsite, icon: Globe, color: 'text-destructive' },
+    { label: 'Bara sociala medier', value: stats.socialOnly, icon: Share2, color: 'text-warning' },
+    { label: 'Högsta lead score', value: stats.highestScore, icon: TrendingUp, color: 'text-success' },
+  ];
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
@@ -46,6 +66,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {stats.topIndustries.length === 0 && <p className="text-sm text-muted-foreground">Ingen data ännu.</p>}
             {stats.topIndustries.map(ind => (
               <div key={ind.name} className="flex items-center justify-between">
                 <span className="text-sm">{ind.name}</span>
@@ -71,6 +92,7 @@ export default function Dashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
+            {stats.topCities.length === 0 && <p className="text-sm text-muted-foreground">Ingen data ännu.</p>}
             {stats.topCities.map(city => (
               <div key={city.name} className="flex items-center justify-between">
                 <span className="text-sm">{city.name}</span>
