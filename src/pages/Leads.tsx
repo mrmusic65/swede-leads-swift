@@ -94,6 +94,7 @@ export default function Leads() {
       website_statuses: undefined,
       phone_status: undefined,
       registeredAfter: undefined,
+      minScore: undefined,
     };
 
     const wsStatuses: string[] = [];
@@ -103,6 +104,7 @@ export default function Leads() {
 
     if (qf.has('has_phone')) partial.phone_status = 'has_phone';
     if (qf.has('new_30d')) partial.registeredAfter = thirtyDaysAgo.toISOString().split('T')[0];
+    if (qf.has('high_score')) partial.minScore = 60;
 
     setFilters(prev => ({ ...prev, ...partial, page: 1 }));
   };
