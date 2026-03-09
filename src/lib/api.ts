@@ -136,36 +136,41 @@ export async function fetchDashboardStats() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const [allRes, newRes, noWebRes, socialRes] = await Promise.all([
-    supabase.from('companies').select('city, industry_label, website_status, phone_status, registration_date'),
+  const [allRes, newRes, noWebRes, socialRes, hasPhoneRes] = await Promise.all([
+    supabase.from('companies').select('city, industry_label, website_status, phone_status, registration_date, company_name, id'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).gte('registration_date', thirtyDaysAgo.toISOString().split('T')[0]),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('website_status', 'no_website_found'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('website_status', 'social_only'),
+    supabase.from('companies').select('id', { count: 'exact', head: true }).eq('phone_status', 'has_phone'),
   ]);
 
   const companies = allRes.data ?? [];
 
   const industryCounts: Record<string, number> = {};
   const cityCounts: Record<string, number> = {};
-  let highestScore = 0;
+  const scored: { id: string; name: string; score: number }[] = [];
 
   companies.forEach(c => {
     if (c.industry_label) industryCounts[c.industry_label] = (industryCounts[c.industry_label] || 0) + 1;
     if (c.city) cityCounts[c.city] = (cityCounts[c.city] || 0) + 1;
     const score = calculateLeadScore(c as Company);
-    if (score > highestScore) highestScore = score;
+    scored.push({ id: c.id, name: c.company_name, score });
   });
+
+  scored.sort((a, b) => b.score - a.score);
 
   const topIndustries = Object.entries(industryCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count }));
   const topCities = Object.entries(cityCounts).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([name, count]) => ({ name, count }));
+  const topLeads = scored.slice(0, 5);
 
   return {
     newLast30: newRes.count ?? 0,
     noWebsite: noWebRes.count ?? 0,
     socialOnly: socialRes.count ?? 0,
-    highestScore,
+    hasPhone: hasPhoneRes.count ?? 0,
     topIndustries,
     topCities,
+    topLeads,
   };
 }
 
