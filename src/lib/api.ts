@@ -231,27 +231,41 @@ export async function deleteSavedFilter(id: string) {
   if (error) throw error;
 }
 
-export async function exportCompaniesCSV(filters: LeadFilters = {}) {
-  const { data } = await fetchCompanies({ ...filters, page: 1, pageSize: 10000 });
+const EXPORT_HEADERS = [
+  'company_name', 'org_number', 'registration_date', 'industry_label',
+  'address', 'city', 'phone_number', 'website_url', 'website_status',
+  'lead_score', 'source_provider',
+];
 
-  const headers = ['company_name', 'org_number', 'registration_date', 'company_form', 'industry_label', 'address', 'postal_code', 'city', 'municipality', 'county', 'website_url', 'website_status', 'phone_number', 'phone_status', 'source_primary'];
-  const csvRows = [headers.join(',')];
+function escapeCSVField(val: unknown): string {
+  if (val == null) return '';
+  const str = String(val);
+  return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
+}
 
-  data.forEach(c => {
-    const row = headers.map(h => {
-      const val = (c as any)[h];
-      if (val == null) return '';
-      const str = String(val);
-      return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
+function companiesToCSV(companies: Company[], filename: string) {
+  const rows = [EXPORT_HEADERS.join(',')];
+  companies.forEach(c => {
+    const row = EXPORT_HEADERS.map(h => {
+      if (h === 'lead_score') return String(calculateLeadScore(c));
+      return escapeCSVField((c as any)[h]);
     });
-    csvRows.push(row.join(','));
+    rows.push(row.join(','));
   });
-
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `leads-export-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+export async function exportCompaniesCSV(filters: LeadFilters = {}) {
+  const { data } = await fetchCompanies({ ...filters, page: 1, pageSize: 10000 });
+  companiesToCSV(data as Company[], `leads-export-${new Date().toISOString().split('T')[0]}.csv`);
+}
+
+export function exportSelectedCompaniesCSV(companies: Company[]) {
+  companiesToCSV(companies, `leads-selected-${new Date().toISOString().split('T')[0]}.csv`);
 }

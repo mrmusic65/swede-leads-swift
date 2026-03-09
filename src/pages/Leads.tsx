@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchCompanies, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
+import { fetchCompanies, calculateLeadScore, exportCompaniesCSV, exportSelectedCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
 import PhoneStatusBadge from '@/components/PhoneStatusBadge';
@@ -39,26 +39,7 @@ function getHighPriorityFilters(): LeadFilters {
   };
 }
 
-function exportSelectedCSV(companies: Company[]) {
-  const headers = ['company_name', 'org_number', 'registration_date', 'company_form', 'industry_label', 'address', 'postal_code', 'city', 'municipality', 'county', 'website_url', 'website_status', 'phone_number', 'phone_status', 'source_primary'];
-  const csvRows = [headers.join(',')];
-  companies.forEach(c => {
-    const row = headers.map(h => {
-      const val = (c as any)[h];
-      if (val == null) return '';
-      const str = String(val);
-      return str.includes(',') || str.includes('"') || str.includes('\n') ? `"${str.replace(/"/g, '""')}"` : str;
-    });
-    csvRows.push(row.join(','));
-  });
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `leads-selected-${new Date().toISOString().split('T')[0]}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
+// Selected export handled by shared util in api.ts
 
 export default function Leads() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -181,7 +162,7 @@ export default function Leads() {
 
   const handleExportSelected = () => {
     const selected = companies.filter(c => selectedIds.has(c.id));
-    if (selected.length > 0) exportSelectedCSV(selected);
+    if (selected.length > 0) exportSelectedCompaniesCSV(selected);
   };
 
   const page = filters.page ?? 1;
