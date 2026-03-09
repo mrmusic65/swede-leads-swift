@@ -5,7 +5,7 @@ import {
   fetchWatchlists,
   createWatchlist,
   deleteWatchlist,
-  fetchWatchlistMatchCount,
+  fetchWatchlistMatchCounts,
   type SavedWatchlist,
   type WatchlistFilters,
 } from '@/lib/watchlist-api';
@@ -29,7 +29,7 @@ const EVENT_TYPES = [
   { value: 'f_tax_registered', label: 'F-skatt' },
   { value: 'employer_registered', label: 'Arbetsgivare' },
   { value: 'address_changed', label: 'Adressändring' },
-  { value: 'industry_changed', label: 'Branschändring' },
+  { value: 'employee_count_updated', label: 'Antal anställda' },
 ];
 
 const WEBSITE_STATUSES = [
@@ -45,10 +45,15 @@ const PHONE_STATUSES = [
   { value: 'unknown', label: 'Okänd' },
 ];
 
+const BOOL_OPTIONS = [
+  { value: 'true', label: 'Ja' },
+  { value: 'false', label: 'Nej' },
+];
+
 export default function WatchlistsPage() {
   const { user } = useAuth();
   const [watchlists, setWatchlists] = useState<SavedWatchlist[]>([]);
-  const [matchCounts, setMatchCounts] = useState<Record<string, number>>({});
+  const [matchCounts, setMatchCounts] = useState<Record<string, { d1: number; d7: number; d30: number }>>({});
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
@@ -74,10 +79,9 @@ export default function WatchlistsPage() {
     try {
       const wl = await fetchWatchlists(user.id);
       setWatchlists(wl);
-      // Fetch match counts in parallel
-      const counts: Record<string, number> = {};
+      const counts: Record<string, { d1: number; d7: number; d30: number }> = {};
       await Promise.all(wl.map(async (w) => {
-        counts[w.id] = await fetchWatchlistMatchCount(w.filters_json as WatchlistFilters);
+        counts[w.id] = await fetchWatchlistMatchCounts(w.filters_json as WatchlistFilters);
       }));
       setMatchCounts(counts);
     } finally {
@@ -87,7 +91,6 @@ export default function WatchlistsPage() {
 
   async function handleCreate() {
     if (!user || !name.trim()) return;
-    // Remove empty filter values
     const cleanFilters: WatchlistFilters = {};
     Object.entries(filters).forEach(([k, v]) => {
       if (v) (cleanFilters as any)[k] = v;
@@ -144,54 +147,118 @@ export default function WatchlistsPage() {
             onChange={e => setName(e.target.value)}
           />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <Select value={filters.city || '_none'} onValueChange={v => updateFilter('city', v)}>
-              <SelectTrigger className="text-xs"><SelectValue placeholder="Stad" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Alla städer</SelectItem>
-                {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Plats & bransch</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Select value={filters.city || '_none'} onValueChange={v => updateFilter('city', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Stad" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla städer</SelectItem>
+                  {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-            <Select value={filters.county || '_none'} onValueChange={v => updateFilter('county', v)}>
-              <SelectTrigger className="text-xs"><SelectValue placeholder="Län" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Alla län</SelectItem>
-                {counties.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              <Select value={filters.county || '_none'} onValueChange={v => updateFilter('county', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Län" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla län</SelectItem>
+                  {counties.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-            <Select value={filters.industry_label || '_none'} onValueChange={v => updateFilter('industry_label', v)}>
-              <SelectTrigger className="text-xs"><SelectValue placeholder="Bransch" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Alla branscher</SelectItem>
-                {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              <Select value={filters.industry_label || '_none'} onValueChange={v => updateFilter('industry_label', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Bransch" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla branscher</SelectItem>
+                  {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-            <Select value={filters.event_type || '_none'} onValueChange={v => updateFilter('event_type', v)}>
-              <SelectTrigger className="text-xs"><SelectValue placeholder="Händelsetyp" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Alla händelser</SelectItem>
-                {EVENT_TYPES.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              <Select value={filters.company_form || '_none'} onValueChange={v => updateFilter('company_form', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Bolagsform" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla bolagsformer</SelectItem>
+                  {['AB', 'HB', 'EF', 'KB', 'Stiftelse'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-            <Select value={filters.website_status || '_none'} onValueChange={v => updateFilter('website_status', v)}>
-              <SelectTrigger className="text-xs"><SelectValue placeholder="Hemsidestatus" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Alla</SelectItem>
-                {WEBSITE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Registreringsstatus</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Select value={filters.f_tax_registered || '_none'} onValueChange={v => updateFilter('f_tax_registered', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="F-skatt" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla</SelectItem>
+                  {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
 
-            <Select value={filters.phone_status || '_none'} onValueChange={v => updateFilter('phone_status', v)}>
-              <SelectTrigger className="text-xs"><SelectValue placeholder="Telefonstatus" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="_none">Alla</SelectItem>
-                {PHONE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+              <Select value={filters.vat_registered || '_none'} onValueChange={v => updateFilter('vat_registered', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Momsregistrerad" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla</SelectItem>
+                  {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.employer_registered || '_none'} onValueChange={v => updateFilter('employer_registered', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Arbetsgivare" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla</SelectItem>
+                  {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.event_type || '_none'} onValueChange={v => updateFilter('event_type', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Händelsetyp" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla händelser</SelectItem>
+                  {EVENT_TYPES.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Digital närvaro</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <Select value={filters.website_status || '_none'} onValueChange={v => updateFilter('website_status', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Hemsidestatus" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla</SelectItem>
+                  {WEBSITE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <Select value={filters.phone_status || '_none'} onValueChange={v => updateFilter('phone_status', v)}>
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Telefonstatus" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">Alla</SelectItem>
+                  {PHONE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+
+              <div>
+                <Input
+                  type="date"
+                  placeholder="Registrerad efter"
+                  value={filters.registeredAfter || ''}
+                  onChange={e => updateFilter('registeredAfter', e.target.value || '_none')}
+                  className="text-xs h-9"
+                />
+              </div>
+              <div>
+                <Input
+                  type="date"
+                  placeholder="Registrerad före"
+                  value={filters.registeredBefore || ''}
+                  onChange={e => updateFilter('registeredBefore', e.target.value || '_none')}
+                  className="text-xs h-9"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center justify-between">
@@ -222,23 +289,34 @@ export default function WatchlistsPage() {
         <div className="space-y-3">
           {watchlists.map(wl => {
             const f = wl.filters_json as WatchlistFilters;
-            const count = matchCounts[wl.id] ?? 0;
+            const counts = matchCounts[wl.id] ?? { d1: 0, d7: 0, d30: 0 };
             const filterTags = [
               f.city, f.county, f.industry_label, f.company_form,
               f.website_status && WEBSITE_STATUSES.find(s => s.value === f.website_status)?.label,
               f.phone_status && PHONE_STATUSES.find(s => s.value === f.phone_status)?.label,
               f.event_type && EVENT_TYPES.find(e => e.value === f.event_type)?.label,
+              f.f_tax_registered === 'true' ? 'F-skatt: Ja' : f.f_tax_registered === 'false' ? 'F-skatt: Nej' : null,
+              f.vat_registered === 'true' ? 'Moms: Ja' : f.vat_registered === 'false' ? 'Moms: Nej' : null,
+              f.employer_registered === 'true' ? 'Arbetsgivare: Ja' : f.employer_registered === 'false' ? 'Arbetsgivare: Nej' : null,
+              f.registeredAfter ? `Från ${f.registeredAfter}` : null,
+              f.registeredBefore ? `Till ${f.registeredBefore}` : null,
             ].filter(Boolean);
 
             return (
               <Card key={wl.id} className="hover:border-primary/30 transition-colors">
                 <CardContent className="py-4 px-5 flex items-center justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <Eye className="w-4 h-4 text-primary shrink-0" />
                       <h3 className="text-sm font-semibold truncate">{wl.name}</h3>
-                      <Badge variant={count > 0 ? 'default' : 'secondary'} className="text-[10px] shrink-0">
-                        {count} träffar (7d)
+                      <Badge variant={counts.d1 > 0 ? 'default' : 'secondary'} className="text-[10px] shrink-0">
+                        {counts.d1} (24h)
+                      </Badge>
+                      <Badge variant={counts.d7 > 0 ? 'default' : 'secondary'} className="text-[10px] shrink-0">
+                        {counts.d7} (7d)
+                      </Badge>
+                      <Badge variant={counts.d30 > 0 ? 'default' : 'secondary'} className="text-[10px] shrink-0">
+                        {counts.d30} (30d)
                       </Badge>
                     </div>
                     {filterTags.length > 0 && (
