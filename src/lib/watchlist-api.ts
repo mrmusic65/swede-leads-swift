@@ -14,6 +14,9 @@ export interface WatchlistFilters {
   event_type?: string;
   registeredAfter?: string;
   registeredBefore?: string;
+  f_tax_registered?: string;
+  vat_registered?: string;
+  employer_registered?: string;
 }
 
 export async function fetchWatchlists(userId: string): Promise<SavedWatchlist[]> {
@@ -47,14 +50,7 @@ export async function fetchWatchlistById(id: string): Promise<SavedWatchlist> {
   return data;
 }
 
-/** Count companies matching a watchlist's filters that were created in the last 7 days */
-export async function fetchWatchlistMatchCount(filters: WatchlistFilters): Promise<number> {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-  let query = supabase.from('companies').select('id', { count: 'exact', head: true })
-    .gte('created_at', sevenDaysAgo.toISOString());
-
+function applyCompanyFilters(query: any, filters: WatchlistFilters) {
   if (filters.city) query = query.eq('city', filters.city);
   if (filters.county) query = query.eq('county', filters.county);
   if (filters.industry_label) query = query.eq('industry_label', filters.industry_label);
@@ -63,45 +59,66 @@ export async function fetchWatchlistMatchCount(filters: WatchlistFilters): Promi
   if (filters.phone_status) query = query.eq('phone_status', filters.phone_status as any);
   if (filters.registeredAfter) query = query.gte('registration_date', filters.registeredAfter);
   if (filters.registeredBefore) query = query.lte('registration_date', filters.registeredBefore);
+  if (filters.f_tax_registered === 'true') query = query.eq('f_tax_registered', true);
+  if (filters.f_tax_registered === 'false') query = query.eq('f_tax_registered', false);
+  if (filters.vat_registered === 'true') query = query.eq('vat_registered', true);
+  if (filters.vat_registered === 'false') query = query.eq('vat_registered', false);
+  if (filters.employer_registered === 'true') query = query.eq('employer_registered', true);
+  if (filters.employer_registered === 'false') query = query.eq('employer_registered', false);
+  return query;
+}
+
+/** Count companies matching filters created within a given number of days */
+export async function fetchWatchlistMatchCountForDays(filters: WatchlistFilters, days: number): Promise<number> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+
+  let query = supabase.from('companies').select('id', { count: 'exact', head: true })
+    .gte('created_at', since.toISOString());
+
+  query = applyCompanyFilters(query, filters);
 
   const { count, error } = await query;
   if (error) throw error;
   return count ?? 0;
 }
 
+/** Fetch match counts for 24h, 7d, 30d */
+export async function fetchWatchlistMatchCounts(filters: WatchlistFilters): Promise<{ d1: number; d7: number; d30: number }> {
+  const [d1, d7, d30] = await Promise.all([
+    fetchWatchlistMatchCountForDays(filters, 1),
+    fetchWatchlistMatchCountForDays(filters, 7),
+    fetchWatchlistMatchCountForDays(filters, 30),
+  ]);
+  return { d1, d7, d30 };
+}
+
 /** Fetch matching companies for a watchlist */
 export async function fetchWatchlistMatches(filters: WatchlistFilters, limit = 50) {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   let query = supabase.from('companies').select('*')
-    .gte('created_at', sevenDaysAgo.toISOString())
+    .gte('created_at', thirtyDaysAgo.toISOString())
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (filters.city) query = query.eq('city', filters.city);
-  if (filters.county) query = query.eq('county', filters.county);
-  if (filters.industry_label) query = query.eq('industry_label', filters.industry_label);
-  if (filters.company_form) query = query.eq('company_form', filters.company_form);
-  if (filters.website_status) query = query.eq('website_status', filters.website_status as any);
-  if (filters.phone_status) query = query.eq('phone_status', filters.phone_status as any);
-  if (filters.registeredAfter) query = query.gte('registration_date', filters.registeredAfter);
-  if (filters.registeredBefore) query = query.lte('registration_date', filters.registeredBefore);
+  query = applyCompanyFilters(query, filters);
 
   const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
 }
 
-/** Fetch events matching a watchlist's event_type filter from last 7 days */
-export async function fetchWatchlistEvents(filters: WatchlistFilters, limit = 30) {
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+/** Fetch events matching a watchlist's event_type filter from last 30 days */
+export async function fetchWatchlistEvents(filters: WatchlistFilters, limit = 50) {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
   let query = supabase
     .from('company_events')
     .select('*, companies(id, company_name, city)')
-    .gte('event_date', sevenDaysAgo.toISOString().split('T')[0])
+    .gte('event_date', thirtyDaysAgo.toISOString().split('T')[0])
     .order('event_date', { ascending: false })
     .limit(limit);
 
@@ -118,9 +135,7 @@ export interface AlertRunWithWatchlist extends AlertRun {
   saved_watchlists?: { id: string; name: string } | null;
 }
 
-/** Fetch recent alert runs for the current user's watchlists */
 export async function fetchRecentAlertRuns(userId: string, limit = 10): Promise<AlertRunWithWatchlist[]> {
-  // First get user's watchlist IDs
   const { data: watchlists } = await supabase
     .from('saved_watchlists')
     .select('id')
@@ -140,7 +155,6 @@ export async function fetchRecentAlertRuns(userId: string, limit = 10): Promise<
   return (data ?? []) as AlertRunWithWatchlist[];
 }
 
-/** Fetch total alert matches from today for user's watchlists */
 export async function fetchTodayAlertSummary(userId: string): Promise<{ totalMatches: number; watchlistsWithMatches: number }> {
   const today = new Date().toISOString().split('T')[0];
 
@@ -165,7 +179,6 @@ export async function fetchTodayAlertSummary(userId: string): Promise<{ totalMat
   return { totalMatches, watchlistsWithMatches };
 }
 
-/** Trigger alert run manually */
 export async function triggerAlertRun(): Promise<{ runs: number }> {
   const { data, error } = await supabase.functions.invoke('run-watchlist-alerts');
   if (error) throw error;
