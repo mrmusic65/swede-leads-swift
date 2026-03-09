@@ -83,6 +83,17 @@ export default function Leads() {
 
   return (
     <div className="space-y-4 animate-fade-in">
+      {highlightIds.size > 0 && (
+        <div className="bg-accent border border-primary/20 rounded-lg px-4 py-3 flex items-center justify-between">
+          <p className="text-sm text-accent-foreground">
+            <span className="font-semibold">{highlightIds.size} nya leads</span> importerade och markerade nedan
+          </p>
+          <Button variant="ghost" size="sm" onClick={() => { setHighlightIds(new Set()); sessionStorage.removeItem('highlight_import_ids'); }}>
+            <X className="w-3 h-3 mr-1" /> Stäng
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Leads</h1>
