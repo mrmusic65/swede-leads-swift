@@ -161,8 +161,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Default values
-        if (!record.website_status) record.website_status = 'unknown';
+        // Auto-detect website_status from website_url
+        if (!record.website_status || record.website_status === 'unknown') {
+          record.website_status = detectWebsiteStatus(record.website_url);
+        }
         if (!record.phone_status) record.phone_status = 'unknown';
         if (!record.source_primary) record.source_primary = 'CSV Import';
 
