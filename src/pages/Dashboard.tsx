@@ -66,8 +66,8 @@ export default function Dashboard() {
     return (
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold tracking-tight">Dashboard</h1></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       </div>
     );
