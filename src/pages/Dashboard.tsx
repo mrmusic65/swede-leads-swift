@@ -95,7 +95,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground mt-1">Trigger intelligence för svenska bolag</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpiCards.map(card => (
           <Card key={card.label}>
             <CardContent className="pt-5 pb-4 px-5">
