@@ -269,6 +269,8 @@ Deno.serve(async (req) => {
       await supabase.from('imports').update({
         status: finalStatus,
         imported_rows: totalInserted,
+        duplicate_rows: duplicateRows.length,
+        skipped_rows: skippedRows.length,
       }).eq('id', importRecord.id);
 
       return new Response(JSON.stringify({
