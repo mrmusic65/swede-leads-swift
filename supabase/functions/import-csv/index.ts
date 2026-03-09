@@ -8,6 +8,15 @@ const corsHeaders = {
 const VALID_WEBSITE_STATUSES = ['has_website', 'social_only', 'no_website_found', 'unknown'];
 const VALID_PHONE_STATUSES = ['has_phone', 'missing', 'unknown'];
 
+const SOCIAL_DOMAINS = ['facebook.com', 'instagram.com', 'linktr.ee', 'bokadirekt.se'];
+
+function detectWebsiteStatus(url: string | null | undefined): string {
+  if (!url || !url.trim()) return 'no_website_found';
+  const lower = url.toLowerCase();
+  if (SOCIAL_DOMAINS.some(d => lower.includes(d))) return 'social_only';
+  return 'has_website';
+}
+
 const DB_FIELDS = [
   'company_name', 'org_number', 'registration_date', 'company_form',
   'sni_code', 'industry_label', 'address', 'postal_code', 'city',
@@ -152,8 +161,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Default values
-        if (!record.website_status) record.website_status = 'unknown';
+        // Auto-detect website_status from website_url
+        if (!record.website_status || record.website_status === 'unknown') {
+          record.website_status = detectWebsiteStatus(record.website_url);
+        }
         if (!record.phone_status) record.phone_status = 'unknown';
         if (!record.source_primary) record.source_primary = 'CSV Import';
 
