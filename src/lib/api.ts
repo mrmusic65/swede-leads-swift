@@ -142,7 +142,7 @@ export async function fetchDashboardStats() {
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
   const today = new Date().toISOString().split('T')[0];
 
-  const [allRes, newRes, noWebRes, socialRes, hasPhoneRes, newTodayRes, latestRes] = await Promise.all([
+  const [allRes, newRes, noWebRes, socialRes, hasPhoneRes, newTodayRes, latestRes, prospectsRes] = await Promise.all([
     supabase.from('companies').select('city, industry_label, website_status, phone_status, registration_date, company_name, id'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).gte('registration_date', thirtyDaysAgo.toISOString().split('T')[0]),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('website_status', 'no_website_found'),
@@ -150,6 +150,12 @@ export async function fetchDashboardStats() {
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('phone_status', 'has_phone'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).gte('created_at', `${today}T00:00:00`),
     supabase.from('companies').select('id, company_name, registration_date, city, industry_label').order('registration_date', { ascending: false }).limit(5),
+    supabase.from('companies').select('id, company_name, registration_date, city, industry_label, website_status, phone_status, phone_number')
+      .in('website_status', ['no_website_found', 'social_only'] as any)
+      .eq('phone_status', 'has_phone')
+      .gte('registration_date', thirtyDaysAgo.toISOString().split('T')[0])
+      .order('registration_date', { ascending: false })
+      .limit(50),
   ]);
 
   const companies = allRes.data ?? [];
