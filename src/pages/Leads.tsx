@@ -162,7 +162,7 @@ export default function Leads() {
 
   const handleExportSelected = () => {
     const selected = companies.filter(c => selectedIds.has(c.id));
-    if (selected.length > 0) exportSelectedCSV(selected);
+    if (selected.length > 0) exportSelectedCompaniesCSV(selected);
   };
 
   const page = filters.page ?? 1;
