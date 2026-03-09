@@ -40,9 +40,8 @@ export default function ImportPage() {
     setStatus('loading');
     try {
       const text = await file.text();
-      const rows = parseCSV(text);
-      if (rows.length === 0) throw new Error('Filen verkar tom eller har fel format.');
-      const count = await importCompaniesFromCSV(rows, user.id, file.name);
+      if (!text.trim()) throw new Error('Filen verkar tom.');
+      const count = await importCompaniesFromCSV(text, file.name);
       setImportedCount(count);
       setStatus('success');
       toast({ title: 'Import klar!', description: `${count} bolag importerade.` });
