@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
       // Create import record
       const { data: importRecord, error: importError } = await supabase
         .from('imports')
-        .insert({ user_id: userId, file_name: safeName, source_name: 'CSV', status: 'processing' })
+        .insert({ user_id: userId, file_name: safeName, source_name: 'csv_upload', status: 'processing', fetched_rows: rows.length })
         .select()
         .single();
       if (importError) {
