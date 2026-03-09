@@ -24,11 +24,15 @@ const EVENT_TYPE_META: Record<string, { label: string; icon: typeof Zap; classNa
 };
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState<Awaited<ReturnType<typeof fetchDashboardStats>> | null>(null);
   const [events, setEvents] = useState<CompanyEvent[]>([]);
   const [eventCounts, setEventCounts] = useState<Record<string, number>>({});
   const [eventFilter, setEventFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [alertRuns, setAlertRuns] = useState<AlertRunWithWatchlist[]>([]);
+  const [alertSummary, setAlertSummary] = useState<{ totalMatches: number; watchlistsWithMatches: number }>({ totalMatches: 0, watchlistsWithMatches: 0 });
+  const [runningAlerts, setRunningAlerts] = useState(false);
 
   useEffect(() => {
     Promise.all([
