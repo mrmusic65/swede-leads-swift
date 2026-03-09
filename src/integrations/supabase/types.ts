@@ -32,6 +32,7 @@ export type Database = {
           registration_date: string | null
           sni_code: string | null
           source_primary: string | null
+          source_provider: string | null
           updated_at: string
           website_status: Database["public"]["Enums"]["website_status"]
           website_url: string | null
@@ -53,6 +54,7 @@ export type Database = {
           registration_date?: string | null
           sni_code?: string | null
           source_primary?: string | null
+          source_provider?: string | null
           updated_at?: string
           website_status?: Database["public"]["Enums"]["website_status"]
           website_url?: string | null
@@ -74,6 +76,7 @@ export type Database = {
           registration_date?: string | null
           sni_code?: string | null
           source_primary?: string | null
+          source_provider?: string | null
           updated_at?: string
           website_status?: Database["public"]["Enums"]["website_status"]
           website_url?: string | null
