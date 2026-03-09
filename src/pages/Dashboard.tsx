@@ -76,11 +76,12 @@ export default function Dashboard() {
   if (!stats) return null;
 
   const kpiCards = [
-    { label: 'Nya bolag (30 dagar)', value: stats.newLast30, icon: Building2, color: 'text-primary' },
-    { label: 'Nya bolag idag', value: stats.newToday, icon: CalendarPlus, color: 'text-success' },
-    { label: 'Utan hemsida', value: stats.noWebsite, icon: Globe, color: 'text-destructive' },
-    { label: 'Bara sociala medier', value: stats.socialOnly, icon: Share2, color: 'text-warning' },
-    { label: 'Har telefonnummer', value: stats.hasPhone, icon: Phone, color: 'text-success' },
+    { label: 'Nya bolag (24h)', value: stats.newLast24h, icon: CalendarPlus, color: 'text-success' },
+    { label: 'Nya bolag (7 dagar)', value: stats.newLast7d, icon: Building2, color: 'text-primary' },
+    { label: 'Ny F-skatt', value: stats.fTaxEvents, icon: FileCheck, color: 'text-warning' },
+    { label: 'Ny momsreg.', value: stats.vatEvents, icon: FileCheck, color: 'text-success' },
+    { label: 'Ny arbetsgivare', value: stats.employerEvents, icon: Briefcase, color: 'text-primary' },
+    { label: 'Adressändringar', value: stats.addressEvents, icon: MapPin, color: 'text-muted-foreground' },
   ];
 
   const totalEventsToday = Object.values(eventCounts).reduce((a, b) => a + b, 0);
