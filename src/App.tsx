@@ -47,6 +47,8 @@ const App = () => (
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/import" element={<ImportPage />} />
               <Route path="/export" element={<ExportPage />} />
+              <Route path="/watchlists" element={<WatchlistsPage />} />
+              <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

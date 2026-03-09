@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
+  { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/import', label: 'Import CSV', icon: Upload },
   { to: '/export', label: 'Export CSV', icon: Download },
   { to: '/admin', label: 'Admin', icon: Shield },
