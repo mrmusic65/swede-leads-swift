@@ -17,6 +17,11 @@ function detectWebsiteStatus(url: string | null | undefined): string {
   return 'has_website';
 }
 
+function detectPhoneStatus(phone: string | null | undefined): string {
+  if (!phone || !phone.trim()) return 'missing';
+  return 'has_phone';
+}
+
 const DB_FIELDS = [
   'company_name', 'org_number', 'registration_date', 'company_form',
   'sni_code', 'industry_label', 'address', 'postal_code', 'city',
@@ -126,7 +131,7 @@ Deno.serve(async (req) => {
       // Create import record
       const { data: importRecord, error: importError } = await supabase
         .from('imports')
-        .insert({ user_id: userId, file_name: safeName, source_name: 'CSV', status: 'processing' })
+        .insert({ user_id: userId, file_name: safeName, source_name: 'csv_upload', status: 'processing', fetched_rows: rows.length })
         .select()
         .single();
       if (importError) {
@@ -165,8 +170,12 @@ Deno.serve(async (req) => {
         if (!record.website_status || record.website_status === 'unknown') {
           record.website_status = detectWebsiteStatus(record.website_url);
         }
-        if (!record.phone_status) record.phone_status = 'unknown';
+        // Auto-detect phone_status from phone_number
+        if (!record.phone_status || record.phone_status === 'unknown') {
+          record.phone_status = detectPhoneStatus(record.phone_number);
+        }
         if (!record.source_primary) record.source_primary = 'CSV Import';
+        record.source_provider = 'csv_upload';
 
         mapped.push(record);
       }
@@ -260,6 +269,8 @@ Deno.serve(async (req) => {
       await supabase.from('imports').update({
         status: finalStatus,
         imported_rows: totalInserted,
+        duplicate_rows: duplicateRows.length,
+        skipped_rows: skippedRows.length,
       }).eq('id', importRecord.id);
 
       return new Response(JSON.stringify({
