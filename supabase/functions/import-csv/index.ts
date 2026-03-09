@@ -17,6 +17,11 @@ function detectWebsiteStatus(url: string | null | undefined): string {
   return 'has_website';
 }
 
+function detectPhoneStatus(phone: string | null | undefined): string {
+  if (!phone || !phone.trim()) return 'missing';
+  return 'has_phone';
+}
+
 const DB_FIELDS = [
   'company_name', 'org_number', 'registration_date', 'company_form',
   'sni_code', 'industry_label', 'address', 'postal_code', 'city',
