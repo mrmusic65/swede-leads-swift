@@ -62,15 +62,15 @@ export default function LeadDetail() {
   const scoreExplanation: string[] = [];
   if (company.registration_date) {
     const days = Math.floor((Date.now() - new Date(company.registration_date).getTime()) / (1000 * 60 * 60 * 24));
-    if (days <= 30) scoreExplanation.push('Nyregistrerat (senaste 30 dagarna): +30');
-    else if (days <= 60) scoreExplanation.push('Registrerat senaste 60 dagarna: +15');
+    if (days <= 30) scoreExplanation.push('Nyregistrerat (senaste 30 dagarna): +40');
   }
-  if (company.website_status === 'no_website_found') scoreExplanation.push('Ingen hemsida: +40');
-  else if (company.website_status === 'social_only') scoreExplanation.push('Bara sociala medier: +20');
-  if (company.phone_status === 'has_phone') scoreExplanation.push('Telefonnummer tillgängligt: +15');
-  if (company.industry_label && ['Restaurang & Café', 'Bygg & Renovation', 'Frisör & Skönhet', 'Städ & Facility', 'Hälsa & Träning'].includes(company.industry_label)) {
-    scoreExplanation.push('Lokal tjänstebransch: +15');
+  const localIndustries = ['Restaurang & Café', 'Bygg & Renovation', 'Frisör & Skönhet', 'Städ & Facility', 'Hälsa & Träning', 'Bilverkstad & Motor', 'Hemtjänst & Omsorg', 'Trädgård & Markarbete', 'El & VVS', 'Flyttfirma', 'Målare & Tapetserare', 'Tandvård', 'Veterinär'];
+  if (company.industry_label && localIndustries.includes(company.industry_label)) {
+    scoreExplanation.push('Lokal tjänstebransch: +30');
   }
+  if (company.website_status === 'no_website_found') scoreExplanation.push('Ingen hemsida: +25');
+  else if (company.website_status === 'social_only') scoreExplanation.push('Bara sociala medier: +15');
+  if (company.phone_status === 'has_phone') scoreExplanation.push('Telefonnummer tillgängligt: +10');
 
   const infoItems = [
     { icon: Hash, label: 'Org.nummer', value: company.org_number },
