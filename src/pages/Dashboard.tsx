@@ -66,8 +66,8 @@ export default function Dashboard() {
     return (
       <div className="space-y-6">
         <div><h1 className="text-2xl font-bold tracking-tight">Dashboard</h1></div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+          {[1, 2, 3, 4, 5, 6].map(i => <Skeleton key={i} className="h-24 rounded-lg" />)}
         </div>
       </div>
     );
@@ -76,11 +76,12 @@ export default function Dashboard() {
   if (!stats) return null;
 
   const kpiCards = [
-    { label: 'Nya bolag (30 dagar)', value: stats.newLast30, icon: Building2, color: 'text-primary' },
-    { label: 'Nya bolag idag', value: stats.newToday, icon: CalendarPlus, color: 'text-success' },
-    { label: 'Utan hemsida', value: stats.noWebsite, icon: Globe, color: 'text-destructive' },
-    { label: 'Bara sociala medier', value: stats.socialOnly, icon: Share2, color: 'text-warning' },
-    { label: 'Har telefonnummer', value: stats.hasPhone, icon: Phone, color: 'text-success' },
+    { label: 'Nya bolag (24h)', value: stats.newLast24h, icon: CalendarPlus, color: 'text-success' },
+    { label: 'Nya bolag (7 dagar)', value: stats.newLast7d, icon: Building2, color: 'text-primary' },
+    { label: 'Ny F-skatt', value: stats.fTaxEvents, icon: FileCheck, color: 'text-warning' },
+    { label: 'Ny momsreg.', value: stats.vatEvents, icon: FileCheck, color: 'text-success' },
+    { label: 'Ny arbetsgivare', value: stats.employerEvents, icon: Briefcase, color: 'text-primary' },
+    { label: 'Adressändringar', value: stats.addressEvents, icon: MapPin, color: 'text-muted-foreground' },
   ];
 
   const totalEventsToday = Object.values(eventCounts).reduce((a, b) => a + b, 0);
@@ -94,7 +95,7 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground mt-1">Trigger intelligence för svenska bolag</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {kpiCards.map(card => (
           <Card key={card.label}>
             <CardContent className="pt-5 pb-4 px-5">
@@ -311,7 +312,7 @@ export default function Dashboard() {
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0">{meta.label}</Badge>
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                      {ev.event_label || meta.label}
+                      {(ev.companies as any)?.city ? `${(ev.companies as any).city} · ` : ''}{ev.event_label || meta.label}
                     </p>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0">{ev.event_date}</span>

@@ -140,9 +140,17 @@ export async function addNote(companyId: string, userId: string, noteText: strin
 export async function fetchDashboardStats() {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  const sevenDaysAgo = new Date();
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+  const oneDayAgo = new Date();
+  oneDayAgo.setDate(oneDayAgo.getDate() - 1);
   const today = new Date().toISOString().split('T')[0];
 
-  const [allRes, newRes, noWebRes, socialRes, hasPhoneRes, newTodayRes, latestRes, prospectsRes] = await Promise.all([
+  const [
+    allRes, newRes, noWebRes, socialRes, hasPhoneRes, newTodayRes, latestRes, prospectsRes,
+    new24hRes, new7dRes,
+    fTaxEventsRes, vatEventsRes, employerEventsRes, addressEventsRes,
+  ] = await Promise.all([
     supabase.from('companies').select('city, industry_label, website_status, phone_status, registration_date, company_name, id'),
     supabase.from('companies').select('id', { count: 'exact', head: true }).gte('registration_date', thirtyDaysAgo.toISOString().split('T')[0]),
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('website_status', 'no_website_found'),
@@ -156,6 +164,13 @@ export async function fetchDashboardStats() {
       .gte('registration_date', thirtyDaysAgo.toISOString().split('T')[0])
       .order('registration_date', { ascending: false })
       .limit(50),
+    // New KPI queries
+    supabase.from('companies').select('id', { count: 'exact', head: true }).gte('registration_date', oneDayAgo.toISOString().split('T')[0]),
+    supabase.from('companies').select('id', { count: 'exact', head: true }).gte('registration_date', sevenDaysAgo.toISOString().split('T')[0]),
+    supabase.from('company_events').select('id', { count: 'exact', head: true }).eq('event_type', 'f_tax_registered' as any).gte('event_date', sevenDaysAgo.toISOString().split('T')[0]),
+    supabase.from('company_events').select('id', { count: 'exact', head: true }).eq('event_type', 'vat_registered' as any).gte('event_date', sevenDaysAgo.toISOString().split('T')[0]),
+    supabase.from('company_events').select('id', { count: 'exact', head: true }).eq('event_type', 'employer_registered' as any).gte('event_date', sevenDaysAgo.toISOString().split('T')[0]),
+    supabase.from('company_events').select('id', { count: 'exact', head: true }).eq('event_type', 'address_changed' as any).gte('event_date', sevenDaysAgo.toISOString().split('T')[0]),
   ]);
 
   const companies = allRes.data ?? [];
@@ -204,6 +219,12 @@ export async function fetchDashboardStats() {
     socialOnly: socialRes.count ?? 0,
     hasPhone: hasPhoneRes.count ?? 0,
     newToday: newTodayRes.count ?? 0,
+    newLast24h: new24hRes.count ?? 0,
+    newLast7d: new7dRes.count ?? 0,
+    fTaxEvents: fTaxEventsRes.count ?? 0,
+    vatEvents: vatEventsRes.count ?? 0,
+    employerEvents: employerEventsRes.count ?? 0,
+    addressEvents: addressEventsRes.count ?? 0,
     topIndustries,
     topCities,
     topLeads,
