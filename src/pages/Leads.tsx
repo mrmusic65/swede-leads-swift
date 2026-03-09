@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchCompanies, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
+import { fetchCompanies, calculateLeadScore, exportCompaniesCSV, exportSelectedCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
 import PhoneStatusBadge from '@/components/PhoneStatusBadge';
