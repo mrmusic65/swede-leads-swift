@@ -1,7 +1,9 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DB_FIELDS, type ColumnMap } from '@/lib/import-api';
 import { Check, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
 
 interface ColumnMapperProps {
   csvHeaders: string[];
@@ -11,6 +13,7 @@ interface ColumnMapperProps {
 }
 
 export default function ColumnMapper({ csvHeaders, columnMap, onChange, preview }: ColumnMapperProps) {
+  const [showPreview, setShowPreview] = useState(false);
   const usedCsvHeaders = new Set(Object.values(columnMap));
 
   const handleChange = (dbField: string, csvHeader: string) => {
@@ -25,74 +28,117 @@ export default function ColumnMapper({ csvHeaders, columnMap, onChange, preview 
 
   const mappedCsvHeader = (dbField: string) => columnMap[dbField];
 
-  // Get a preview value for a mapped field
   const getPreview = (dbField: string): string => {
     const csvCol = columnMap[dbField];
     if (!csvCol || !preview[0]) return '—';
     return preview[0][csvCol] || '—';
   };
 
+  const mappedFields = DB_FIELDS.filter(f => columnMap[f.key]);
+
   return (
-    <div className="space-y-1">
-      <div className="grid grid-cols-[1fr,auto,1fr,1fr] gap-3 items-center px-1 py-2 text-xs font-medium text-muted-foreground border-b">
-        <span>Databasfält</span>
-        <span></span>
-        <span>CSV-kolumn</span>
-        <span>Förhandsvisning</span>
-      </div>
-      {DB_FIELDS.map(field => {
-        const mapped = mappedCsvHeader(field.key);
-        const isMapped = !!mapped;
+    <div className="space-y-4">
+      <div className="space-y-1">
+        <div className="grid grid-cols-[1fr,auto,1fr,1fr] gap-3 items-center px-1 py-2 text-xs font-medium text-muted-foreground border-b">
+          <span>Databasfält</span>
+          <span></span>
+          <span>CSV-kolumn</span>
+          <span>Förhandsvisning</span>
+        </div>
+        {DB_FIELDS.map(field => {
+          const mapped = mappedCsvHeader(field.key);
+          const isMapped = !!mapped;
 
-        return (
-          <div
-            key={field.key}
-            className="grid grid-cols-[1fr,auto,1fr,1fr] gap-3 items-center px-1 py-1.5 rounded-md hover:bg-muted/30 transition-colors"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">{field.label}</span>
-              {field.required && (
-                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Krav</Badge>
-              )}
-            </div>
-
-            <div className="w-5 flex justify-center">
-              {isMapped ? (
-                <Check className="w-4 h-4 text-success" />
-              ) : field.required ? (
-                <AlertCircle className="w-4 h-4 text-destructive" />
-              ) : (
-                <span className="w-4 h-4 rounded-full border border-border" />
-              )}
-            </div>
-
-            <Select
-              value={mapped || '__none__'}
-              onValueChange={v => handleChange(field.key, v)}
+          return (
+            <div
+              key={field.key}
+              className="grid grid-cols-[1fr,auto,1fr,1fr] gap-3 items-center px-1 py-1.5 rounded-md hover:bg-muted/30 transition-colors"
             >
-              <SelectTrigger className="h-8 text-xs">
-                <SelectValue placeholder="Välj kolumn..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">— Hoppa över —</SelectItem>
-                {csvHeaders.map(h => (
-                  <SelectItem
-                    key={h}
-                    value={h}
-                    disabled={usedCsvHeaders.has(h) && columnMap[field.key] !== h}
-                  >
-                    {h}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">{field.label}</span>
+                {field.required && (
+                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Krav</Badge>
+                )}
+              </div>
 
-            <span className="text-xs text-muted-foreground truncate">
-              {getPreview(field.key)}
-            </span>
-          </div>
-        );
-      })}
+              <div className="w-5 flex justify-center">
+                {isMapped ? (
+                  <Check className="w-4 h-4 text-success" />
+                ) : field.required ? (
+                  <AlertCircle className="w-4 h-4 text-destructive" />
+                ) : (
+                  <span className="w-4 h-4 rounded-full border border-border" />
+                )}
+              </div>
+
+              <Select
+                value={mapped || '__none__'}
+                onValueChange={v => handleChange(field.key, v)}
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue placeholder="Välj kolumn..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">— Hoppa över —</SelectItem>
+                  {csvHeaders.map(h => (
+                    <SelectItem
+                      key={h}
+                      value={h}
+                      disabled={usedCsvHeaders.has(h) && columnMap[field.key] !== h}
+                    >
+                      {h}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <span className="text-xs text-muted-foreground truncate">
+                {getPreview(field.key)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Preview table toggle */}
+      {preview.length > 0 && mappedFields.length > 0 && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowPreview(!showPreview)}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            {showPreview ? 'Dölj förhandsvisning' : `Visa förhandsvisning (${Math.min(preview.length, 10)} rader)`}
+          </button>
+
+          {showPreview && (
+            <div className="mt-2 border rounded-lg overflow-auto max-h-80">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs w-10">#</TableHead>
+                    {mappedFields.map(f => (
+                      <TableHead key={f.key} className="text-xs whitespace-nowrap">{f.label}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {preview.slice(0, 10).map((row, i) => (
+                    <TableRow key={i}>
+                      <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
+                      {mappedFields.map(f => (
+                        <TableCell key={f.key} className="text-xs truncate max-w-[200px]">
+                          {row[columnMap[f.key]] || '—'}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

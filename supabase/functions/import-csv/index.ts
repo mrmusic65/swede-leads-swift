@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
       }
 
       const { headers, rows } = parseCSV(csv_text);
-      const preview = rows.slice(0, 5);
+      const preview = rows.slice(0, 10);
       const totalRows = rows.length;
 
       return new Response(JSON.stringify({ success: true, headers, preview, totalRows }), { headers: jsonHeaders });
