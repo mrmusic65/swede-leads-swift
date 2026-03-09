@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, MessageSquare, Monitor, Building2, MapPin, Calendar, Phone, Globe, Hash, Briefcase, StickyNote } from 'lucide-react';
+import { ArrowLeft, Mail, MessageSquare, Monitor, Building2, MapPin, Calendar, Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LeadDetail() {
@@ -21,6 +21,8 @@ export default function LeadDetail() {
   const [newNote, setNewNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [copiedInfo, setCopiedInfo] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -59,6 +61,29 @@ export default function LeadDetail() {
     }
   };
 
+  const handleCopyPhone = async () => {
+    if (!company.phone_number) return;
+    await navigator.clipboard.writeText(company.phone_number);
+    setCopiedPhone(true);
+    setTimeout(() => setCopiedPhone(false), 2000);
+    toast({ title: 'Kopierat', description: 'Telefonnummer kopierat.' });
+  };
+
+  const handleCopyInfo = async () => {
+    const lines = [
+      company.company_name,
+      `Org: ${company.org_number}`,
+      company.industry_label && `Bransch: ${company.industry_label}`,
+      company.address && `Adress: ${[company.address, company.postal_code, company.city].filter(Boolean).join(', ')}`,
+      company.phone_number && `Tel: ${company.phone_number}`,
+      company.website_url && `Webb: ${company.website_url}`,
+    ].filter(Boolean).join('\n');
+    await navigator.clipboard.writeText(lines);
+    setCopiedInfo(true);
+    setTimeout(() => setCopiedInfo(false), 2000);
+    toast({ title: 'Kopierat', description: 'Bolagsinformation kopierad.' });
+  };
+
   const scoreExplanation: string[] = [];
   if (company.registration_date) {
     const days = Math.floor((Date.now() - new Date(company.registration_date).getTime()) / (1000 * 60 * 60 * 24));
@@ -80,7 +105,6 @@ export default function LeadDetail() {
     { icon: MapPin, label: 'Adress', value: [company.address, company.postal_code, company.city].filter(Boolean).join(', ') || '—' },
     { icon: MapPin, label: 'Kommun / Län', value: [company.municipality, company.county].filter(Boolean).join(', ') || '—' },
     { icon: Globe, label: 'Hemsida', value: company.website_url || '—' },
-    { icon: Phone, label: 'Telefon', value: company.phone_number || '—' },
   ];
 
   return (
@@ -94,10 +118,14 @@ export default function LeadDetail() {
           <h1 className="text-2xl font-bold tracking-tight">{company.company_name}</h1>
           <p className="text-sm text-muted-foreground mt-1">{company.city} · {company.industry_label}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <WebsiteStatusBadge status={company.website_status} />
           <PhoneStatusBadge status={company.phone_status} />
           <ScoreBadge score={score} />
+          <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs" onClick={handleCopyInfo}>
+            {copiedInfo ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            {copiedInfo ? 'Kopierat' : 'Kopiera info'}
+          </Button>
         </div>
       </div>
 
@@ -114,6 +142,25 @@ export default function LeadDetail() {
                 </div>
               </div>
             ))}
+            {/* Phone with copy button */}
+            <div className="flex items-start gap-2.5">
+              <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-muted-foreground">Telefon</p>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-sm font-medium">{company.phone_number || '—'}</p>
+                  {company.phone_number && (
+                    <button
+                      onClick={handleCopyPhone}
+                      className="inline-flex items-center justify-center w-5 h-5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                      title="Kopiera telefonnummer"
+                    >
+                      {copiedPhone ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
@@ -139,7 +186,7 @@ export default function LeadDetail() {
       <div className="flex flex-wrap gap-2">
         <Button size="sm" className="gap-1.5"><Mail className="w-3.5 h-3.5" /> Generera kall e-post</Button>
         <Button size="sm" variant="outline" className="gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Generera DM</Button>
-        <Button size="sm" variant="outline" className="gap-1.5"><Monitor className="w-3.5 h-3.5" /> Generera webbdemo-prompt</Button>
+        <Button size="sm" variant="outline" className="gap-1.5"><Monitor className="w-3.5 h-3.5" /> Generera webbpitch</Button>
       </div>
 
       <Card>
