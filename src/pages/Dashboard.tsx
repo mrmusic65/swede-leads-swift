@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchDashboardStats, fetchLatestEvents, fetchTodayEventCounts, type CompanyEvent } from '@/lib/api';
-import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock, Star, ArrowRight, Zap, Activity, FileCheck, Briefcase } from 'lucide-react';
+import { fetchRecentAlertRuns, fetchTodayAlertSummary, triggerAlertRun, type AlertRunWithWatchlist } from '@/lib/watchlist-api';
+import { useAuth } from '@/hooks/useAuth';
+import { Building2, Globe, Share2, Phone, BarChart3, MapPin, Trophy, CalendarPlus, Clock, Star, ArrowRight, Zap, Activity, FileCheck, Briefcase, Bell, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import ScoreBadge from '@/components/ScoreBadge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
 import PhoneStatusBadge from '@/components/PhoneStatusBadge';
+import { toast } from 'sonner';
 
 const EVENT_TYPE_META: Record<string, { label: string; icon: typeof Zap; className: string }> = {
   company_registered: { label: 'Nyregistrerat', icon: Building2, className: 'bg-primary/10 text-primary' },
