@@ -142,14 +142,7 @@ export async function fetchDistinctIndustries(): Promise<string[]> {
   return [...new Set(data.map(d => d.industry_label!))].sort();
 }
 
-export async function importCompaniesFromCSV(csvText: string, fileName: string) {
-  const { data, error } = await supabase.functions.invoke('import-csv', {
-    body: { csv_text: csvText, file_name: fileName },
-  });
-  if (error) throw error;
-  if (data?.error) throw new Error(data.error);
-  return data.imported as number;
-}
+// CSV import is now handled via src/lib/import-api.ts → edge function
 
 export async function exportCompaniesCSV(filters: LeadFilters = {}) {
   const { data } = await fetchCompanies({ ...filters, page: 1, pageSize: 10000 });
