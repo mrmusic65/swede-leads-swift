@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, Users, Upload, Download, Zap, LogOut } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/import', label: 'Import', icon: Upload },
   { to: '/export', label: 'Export', icon: Download },
+  { to: '/admin', label: 'Admin', icon: Shield },
 ];
 
 export default function MobileNav() {
