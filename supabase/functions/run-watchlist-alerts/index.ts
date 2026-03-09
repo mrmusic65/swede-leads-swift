@@ -16,6 +16,9 @@ interface WatchlistFilters {
   event_type?: string;
   registeredAfter?: string;
   registeredBefore?: string;
+  f_tax_registered?: string;
+  vat_registered?: string;
+  employer_registered?: string;
 }
 
 Deno.serve(async (req) => {
