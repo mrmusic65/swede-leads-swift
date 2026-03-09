@@ -111,3 +111,63 @@ export async function fetchWatchlistEvents(filters: WatchlistFilters, limit = 30
   if (error) throw error;
   return data ?? [];
 }
+
+// ── Alert Runs API ──
+
+export interface AlertRunWithWatchlist extends AlertRun {
+  saved_watchlists?: { id: string; name: string } | null;
+}
+
+/** Fetch recent alert runs for the current user's watchlists */
+export async function fetchRecentAlertRuns(userId: string, limit = 10): Promise<AlertRunWithWatchlist[]> {
+  // First get user's watchlist IDs
+  const { data: watchlists } = await supabase
+    .from('saved_watchlists')
+    .select('id')
+    .eq('user_id', userId);
+
+  if (!watchlists || watchlists.length === 0) return [];
+
+  const ids = watchlists.map(w => w.id);
+  const { data, error } = await supabase
+    .from('alert_runs')
+    .select('*, saved_watchlists(id, name)')
+    .in('watchlist_id', ids)
+    .order('run_timestamp', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+  return (data ?? []) as AlertRunWithWatchlist[];
+}
+
+/** Fetch total alert matches from today for user's watchlists */
+export async function fetchTodayAlertSummary(userId: string): Promise<{ totalMatches: number; watchlistsWithMatches: number }> {
+  const today = new Date().toISOString().split('T')[0];
+
+  const { data: watchlists } = await supabase
+    .from('saved_watchlists')
+    .select('id')
+    .eq('user_id', userId);
+
+  if (!watchlists || watchlists.length === 0) return { totalMatches: 0, watchlistsWithMatches: 0 };
+
+  const ids = watchlists.map(w => w.id);
+  const { data, error } = await supabase
+    .from('alert_runs')
+    .select('matched_count, watchlist_id')
+    .in('watchlist_id', ids)
+    .gte('run_timestamp', `${today}T00:00:00`);
+
+  if (error) throw error;
+  const runs = data ?? [];
+  const totalMatches = runs.reduce((sum, r) => sum + r.matched_count, 0);
+  const watchlistsWithMatches = new Set(runs.filter(r => r.matched_count > 0).map(r => r.watchlist_id)).size;
+  return { totalMatches, watchlistsWithMatches };
+}
+
+/** Trigger alert run manually */
+export async function triggerAlertRun(): Promise<{ runs: number }> {
+  const { data, error } = await supabase.functions.invoke('run-watchlist-alerts');
+  if (error) throw error;
+  return data;
+}
