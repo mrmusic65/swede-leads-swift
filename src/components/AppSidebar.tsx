@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
