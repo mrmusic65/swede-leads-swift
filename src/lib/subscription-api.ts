@@ -74,7 +74,7 @@ export const PLANS: PlanConfig[] = [
 ];
 
 export async function fetchSubscription(): Promise<Subscription | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('subscriptions')
     .select('*')
     .in('status', ['active', 'trialing'])
@@ -83,7 +83,7 @@ export async function fetchSubscription(): Promise<Subscription | null> {
     .single();
 
   if (error) return null;
-  return data as unknown as Subscription;
+  return data as Subscription;
 }
 
 export async function startCheckout(planKey: string): Promise<void> {
