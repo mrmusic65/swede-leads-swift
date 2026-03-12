@@ -11,6 +11,7 @@ import LeadDetail from "./pages/LeadDetail";
 import ImportPage from "./pages/ImportPage";
 import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
+import SettingsPage from "./pages/SettingsPage";
 import WatchlistsPage from "./pages/WatchlistsPage";
 import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
