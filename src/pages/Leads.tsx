@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCompanies, fetchDistinctCities, fetchDistinctIndustries, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
-import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
+import LeadStatusBadge from '@/components/LeadStatusBadge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -172,7 +172,7 @@ export default function Leads() {
                         <ScoreBadge score={score} />
                       </td>
                       <td className="px-5 py-5">
-                        <WebsiteStatusBadge status={c.website_status} />
+                        <LeadStatusBadge status={(c as any).lead_status ?? 'ny'} />
                       </td>
                       <td className="px-5 py-5">
                         <Link
