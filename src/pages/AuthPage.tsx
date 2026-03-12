@@ -193,7 +193,11 @@ export default function AuthPage() {
       {/* LANDING SECTIONS */}
       <HowItWorks />
       <Benefits />
+      <UseCases />
+      <ConcreteAdvantages />
       <Pricing onSignUp={scrollToForm} />
+      <Faq />
+      <ContactForm />
       <CtaBanner onSignUp={scrollToForm} />
       <Footer />
     </div>
