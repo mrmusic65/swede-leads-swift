@@ -15,6 +15,7 @@ import WatchlistsPage from "./pages/WatchlistsPage";
 import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import AuthPage from "./pages/AuthPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
 import NotFound from "./pages/NotFound";
 
