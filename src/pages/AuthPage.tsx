@@ -8,6 +8,10 @@ import Benefits from '@/components/landing/Benefits';
 import Pricing from '@/components/landing/Pricing';
 import CtaBanner from '@/components/landing/CtaBanner';
 import Footer from '@/components/landing/Footer';
+import UseCases from '@/components/landing/UseCases';
+import ConcreteAdvantages from '@/components/landing/ConcreteAdvantages';
+import Faq from '@/components/landing/Faq';
+import ContactForm from '@/components/landing/ContactForm';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
