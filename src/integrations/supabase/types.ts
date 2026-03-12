@@ -62,6 +62,7 @@ export type Database = {
           industry_group: string | null
           industry_label: string | null
           last_address_change_date: string | null
+          lead_status: Database["public"]["Enums"]["lead_status"]
           municipality: string | null
           org_number: string | null
           phone_number: string | null
@@ -91,6 +92,7 @@ export type Database = {
           industry_group?: string | null
           industry_label?: string | null
           last_address_change_date?: string | null
+          lead_status?: Database["public"]["Enums"]["lead_status"]
           municipality?: string | null
           org_number?: string | null
           phone_number?: string | null
@@ -120,6 +122,7 @@ export type Database = {
           industry_group?: string | null
           industry_label?: string | null
           last_address_change_date?: string | null
+          lead_status?: Database["public"]["Enums"]["lead_status"]
           municipality?: string | null
           org_number?: string | null
           phone_number?: string | null
@@ -406,6 +409,7 @@ export type Database = {
         | "industry_changed"
         | "employee_count_updated"
       import_status: "pending" | "processing" | "completed" | "failed"
+      lead_status: "ny" | "kontaktad" | "kvalificerad" | "ej_intressant"
       phone_status: "has_phone" | "missing" | "unknown"
       website_status:
         | "has_website"
@@ -549,6 +553,7 @@ export const Constants = {
         "employee_count_updated",
       ],
       import_status: ["pending", "processing", "completed", "failed"],
+      lead_status: ["ny", "kontaktad", "kvalificerad", "ej_intressant"],
       phone_status: ["has_phone", "missing", "unknown"],
       website_status: [
         "has_website",
