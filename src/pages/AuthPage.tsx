@@ -166,7 +166,7 @@ export default function AuthPage() {
             <p className="text-base lg:text-lg leading-relaxed mb-10 max-w-lg" style={{ color: '#8a8578' }}>
               {isForgot
                 ? 'Ange din e-postadress så skickar vi en återställningslänk.'
-                : 'LeadRadar levererar kvalificerade företagsleads automatiskt — varje dag, baserat på dina kriterier.'}
+                : 'LeadRadar levererar kvalificerade företagsleads automatiskt  varje dag, baserat på dina kriterier.'}
             </p>
 
             {/* Form */}
