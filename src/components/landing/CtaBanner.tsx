@@ -10,7 +10,7 @@ export default function CtaBanner({ onSignUp }: CtaBannerProps) {
           Redo att hitta dina nästa kunder?
         </h2>
         <p className="text-base mb-10" style={{ color: '#9a9488' }}>
-          Kom igång gratis — inga kreditkort, inga bindningstider.
+          Kom igång gratis, inga kreditkort, inga bindningstider.
         </p>
         <button
           onClick={onSignUp}
