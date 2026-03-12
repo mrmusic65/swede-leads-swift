@@ -13,6 +13,7 @@ import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
 import WatchlistsPage from "./pages/WatchlistsPage";
 import WatchlistDetailPage from "./pages/WatchlistDetailPage";
+import SubscriptionPage from "./pages/SubscriptionPage";
 import AuthPage from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="/export" element={<ExportPage />} />
               <Route path="/watchlists" element={<WatchlistsPage />} />
               <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
+              <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

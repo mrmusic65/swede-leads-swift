@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/import', label: 'Import', icon: Upload },
   { to: '/export', label: 'Export', icon: Download },
+  { to: '/subscription', label: 'Prenumeration', icon: CreditCard },
   { to: '/admin', label: 'Admin', icon: Shield },
 ];
 

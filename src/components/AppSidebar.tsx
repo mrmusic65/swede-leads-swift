@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye } from 'lucide-react';
+import { LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye, CreditCard } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/import', label: 'Import CSV', icon: Upload },
   { to: '/export', label: 'Export CSV', icon: Download },
+  { to: '/subscription', label: 'Prenumeration', icon: CreditCard },
   { to: '/admin', label: 'Admin', icon: Shield },
 ];
 
