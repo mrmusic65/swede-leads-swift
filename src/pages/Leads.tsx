@@ -80,35 +80,35 @@ export default function Leads() {
           />
         </div>
 
-        <Select value={filters.industry_label ?? ''} onValueChange={v => updateFilters({ industry_label: v || undefined })}>
+        <Select value={filters.industry_label ?? '__all__'} onValueChange={v => updateFilters({ industry_label: v === '__all__' ? undefined : v })}>
           <SelectTrigger className="w-full md:w-44 h-9">
             <SelectValue placeholder="Bransch" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Alla branscher</SelectItem>
+            <SelectItem value="__all__">Alla branscher</SelectItem>
             {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
           </SelectContent>
         </Select>
 
-        <Select value={filters.city ?? ''} onValueChange={v => updateFilters({ city: v || undefined })}>
+        <Select value={filters.city ?? '__all__'} onValueChange={v => updateFilters({ city: v === '__all__' ? undefined : v })}>
           <SelectTrigger className="w-full md:w-40 h-9">
             <SelectValue placeholder="Stad" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Alla städer</SelectItem>
+            <SelectItem value="__all__">Alla städer</SelectItem>
             {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
 
         <Select
-          value={(filters as any).company_form ?? ''}
-          onValueChange={v => updateFilters({ ...(v ? { company_form: v } : { company_form: undefined }) } as any)}
+          value={(filters as any).company_form ?? '__all__'}
+          onValueChange={v => updateFilters({ ...(v === '__all__' ? { company_form: undefined } : { company_form: v }) } as any)}
         >
           <SelectTrigger className="w-full md:w-44 h-9">
             <SelectValue placeholder="Bolagsform" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Alla bolagsformer</SelectItem>
+            <SelectItem value="__all__">Alla bolagsformer</SelectItem>
             {COMPANY_FORMS.map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
           </SelectContent>
         </Select>
