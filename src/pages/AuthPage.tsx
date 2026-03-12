@@ -91,6 +91,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -99,7 +100,14 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      if (isSignUp) {
+      if (isForgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast({ title: 'E-post skickad', description: 'Kolla din inbox för en länk att återställa lösenordet.' });
+        setIsForgot(false);
+      } else if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -116,6 +124,18 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getHeading = () => {
+    if (isForgot) return 'Återställ lösenord';
+    if (isSignUp) return 'Skapa konto';
+    return 'Välkommen tillbaka';
+  };
+
+  const getSubheading = () => {
+    if (isForgot) return 'Ange din e-post så skickar vi en återställningslänk.';
+    if (isSignUp) return 'Kom igång med LeadRadar på några sekunder.';
+    return 'Logga in för att fortsätta till LeadRadar.';
   };
 
   return (
@@ -177,10 +197,10 @@ export default function AuthPage() {
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
             <h2 className="text-2xl font-bold text-foreground mb-1.5">
-              {isSignUp ? 'Skapa konto' : 'Välkommen tillbaka'}
+              {getHeading()}
             </h2>
             <p className="text-sm text-muted-foreground">
-              {isSignUp ? 'Kom igång med LeadRadar på några sekunder.' : 'Logga in för att fortsätta till LeadRadar.'}
+              {getSubheading()}
             </p>
           </div>
 
@@ -196,31 +216,53 @@ export default function AuthPage() {
                 className="h-11 rounded-xl bg-background border-input"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">Lösenord</label>
-              <Input
-                type="password"
-                placeholder="Minst 8 tecken"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={8}
-                className="h-11 rounded-xl bg-background border-input"
-              />
-            </div>
+            {!isForgot && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Lösenord</label>
+                <Input
+                  type="password"
+                  placeholder="Minst 8 tecken"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={8}
+                  className="h-11 rounded-xl bg-background border-input"
+                />
+              </div>
+            )}
+            {!isSignUp && !isForgot && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setIsForgot(true)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Glömt lösenord?
+                </button>
+              </div>
+            )}
             <Button type="submit" className="w-full h-11 rounded-xl text-sm font-semibold mt-2" disabled={loading}>
-              {loading ? 'Vänta...' : isSignUp ? 'Skapa konto' : 'Logga in'}
+              {loading ? 'Vänta...' : isForgot ? 'Skicka återställningslänk' : isSignUp ? 'Skapa konto' : 'Logga in'}
             </Button>
           </form>
 
           <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isSignUp ? 'Har du redan ett konto? ' : 'Inget konto ännu? '}
-              <span className="font-medium text-primary">{isSignUp ? 'Logga in' : 'Skapa ett'}</span>
-            </button>
+            {isForgot ? (
+              <button
+                onClick={() => setIsForgot(false)}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ← Tillbaka till <span className="font-medium text-primary">inloggning</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {isSignUp ? 'Har du redan ett konto? ' : 'Inget konto ännu? '}
+                <span className="font-medium text-primary">{isSignUp ? 'Logga in' : 'Skapa ett'}</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
