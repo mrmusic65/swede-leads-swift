@@ -99,7 +99,10 @@ export async function startCheckout(planKey: string): Promise<void> {
   });
 
   if (error) throw new Error(error.message);
-  if (data?.url) window.location.href = data.url;
+  if (data?.url) {
+    const w = window.open(data.url, '_blank');
+    if (!w) window.location.href = data.url;
+  }
 }
 
 export async function openCustomerPortal(): Promise<void> {
@@ -108,7 +111,10 @@ export async function openCustomerPortal(): Promise<void> {
   });
 
   if (error) throw new Error(error.message);
-  if (data?.url) window.location.href = data.url;
+  if (data?.url) {
+    const w = window.open(data.url, '_blank');
+    if (!w) window.location.href = data.url;
+  }
 }
 
 export function formatStatus(status: SubscriptionStatus): { label: string; color: string } {
