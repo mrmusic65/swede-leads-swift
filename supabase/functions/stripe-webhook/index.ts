@@ -45,6 +45,15 @@ Deno.serve(async (req) => {
 
   console.log(`[stripe-webhook] Event: ${event.type}`);
 
+  function safeTimestamp(val: any): string | null {
+    if (val == null) return null;
+    const num = typeof val === "number" ? val : Number(val);
+    if (isNaN(num) || num <= 0) return null;
+    // Stripe sends seconds; if value looks like milliseconds already, use as-is
+    const ms = num > 1e12 ? num : num * 1000;
+    try { return new Date(ms).toISOString(); } catch { return null; }
+  }
+
   try {
     switch (event.type) {
 
@@ -58,26 +67,30 @@ Deno.serve(async (req) => {
           .eq("stripe_customer_id", sub.customer as string)
           .single();
 
-        if (!profile) break;
+        if (!profile) {
+          console.error(`[stripe-webhook] No profile found for customer: ${sub.customer}`);
+          break;
+        }
 
         const priceId = sub.items.data[0]?.price?.id ?? "";
 
-        await supabase.from("subscriptions").upsert({
+        const { error: upsertError } = await supabase.from("subscriptions").upsert({
           user_id: profile.id,
           stripe_subscription_id: sub.id,
-          stripe_customer_id: sub.customer as string,
           stripe_price_id: priceId,
           plan_tier: getPlanTier(priceId),
           status: sub.status,
-          current_period_start: new Date(sub.current_period_start * 1000).toISOString(),
-          current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: sub.cancel_at_period_end,
-          trial_end: sub.trial_end
-            ? new Date(sub.trial_end * 1000).toISOString()
-            : null,
+          current_period_start: safeTimestamp(sub.current_period_start),
+          current_period_end: safeTimestamp(sub.current_period_end),
+          cancel_at_period_end: sub.cancel_at_period_end ?? false,
+          trial_end: safeTimestamp(sub.trial_end),
         }, { onConflict: "stripe_subscription_id" });
 
-        console.log(`[stripe-webhook] Prenumeration uppdaterad: ${sub.id}`);
+        if (upsertError) {
+          console.error(`[stripe-webhook] Upsert error:`, upsertError);
+        } else {
+          console.log(`[stripe-webhook] Prenumeration uppdaterad: ${sub.id}`);
+        }
         break;
       }
 
