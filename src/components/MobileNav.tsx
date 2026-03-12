@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye, CreditCard } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
-  { to: '/import', label: 'Import', icon: Upload },
-  { to: '/export', label: 'Export', icon: Download },
-  { to: '/subscription', label: 'Prenumeration', icon: CreditCard },
-  { to: '/admin', label: 'Admin', icon: Shield },
+  { to: '/export', label: 'Exportera', icon: Download },
 ];
 
 export default function MobileNav() {
@@ -49,8 +46,22 @@ export default function MobileNav() {
               </Link>
             );
           })}
-          <div className="border-t border-border pt-2 mt-2">
+          <div className="border-t border-border pt-2 mt-2 space-y-0.5">
             {user && <p className="px-3 text-xs text-muted-foreground truncate mb-2">{user.email}</p>}
+            <Link
+              to="/subscription"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors w-full"
+            >
+              <CreditCard className="w-4 h-4" /> Prenumeration
+            </Link>
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors w-full"
+            >
+              <Settings className="w-4 h-4" /> Inställningar
+            </Link>
             <button
               onClick={() => { signOut(); setOpen(false); }}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors w-full"

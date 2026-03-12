@@ -1,15 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Upload, Download, Shield, Zap, LogOut, Eye, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronUp } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
-  { to: '/import', label: 'Import CSV', icon: Upload },
-  { to: '/export', label: 'Export CSV', icon: Download },
-  { to: '/subscription', label: 'Prenumeration', icon: CreditCard },
-  { to: '/admin', label: 'Admin', icon: Shield },
+  { to: '/export', label: 'Exportera', icon: Download },
 ];
 
 export default function AppSidebar() {
@@ -45,17 +49,34 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-sidebar-border space-y-1">
-        {user && (
-          <p className="px-3 text-xs text-sidebar-foreground truncate mb-2">{user.email}</p>
-        )}
-        <button
-          onClick={signOut}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full"
-        >
-          <LogOut className="w-4 h-4" />
-          Logga ut
-        </button>
+      <div className="px-3 py-4 border-t border-sidebar-border">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors w-full">
+              <div className="w-7 h-7 rounded-full bg-sidebar-accent flex items-center justify-center text-xs font-semibold text-sidebar-accent-foreground shrink-0">
+                {user?.email?.charAt(0).toUpperCase() ?? '?'}
+              </div>
+              <span className="truncate flex-1 text-left">{user?.email ?? ''}</span>
+              <ChevronUp className="w-4 h-4 shrink-0 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="start" className="w-56">
+            <DropdownMenuItem asChild>
+              <Link to="/subscription" className="flex items-center gap-2 cursor-pointer">
+                <CreditCard className="w-4 h-4" /> Prenumeration
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
+                <Settings className="w-4 h-4" /> Inställningar
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={signOut} className="flex items-center gap-2 cursor-pointer">
+              <LogOut className="w-4 h-4" /> Logga ut
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </aside>
   );
