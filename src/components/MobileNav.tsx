@@ -56,7 +56,7 @@ export default function MobileNav() {
               <CreditCard className="w-4 h-4" /> Prenumeration
             </Link>
             <Link
-              to="/admin"
+              to="/settings"
               onClick={() => setOpen(false)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary transition-colors w-full"
             >

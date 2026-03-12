@@ -56,6 +56,7 @@ const App = () => (
               <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

@@ -92,7 +92,7 @@ export default function AppSidebar() {
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="px-2.5 py-2.5 rounded-md cursor-pointer">
-              <Link to="/admin" className="flex items-center gap-3">
+              <Link to="/settings" className="flex items-center gap-3">
                 <Settings className="w-4 h-4 text-muted-foreground" />
                 <span>Inställningar</span>
               </Link>
