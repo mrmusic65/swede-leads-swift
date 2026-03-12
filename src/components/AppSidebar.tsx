@@ -30,9 +30,35 @@ function getAvatarColor(email: string | undefined) {
   return AVATAR_COLORS[code % AVATAR_COLORS.length];
 }
 
+const TIER_LABELS: Record<string, string> = {
+  starter: 'Starter',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+};
+
 export default function AppSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
+
+  const { data: subscription } = useQuery({
+    queryKey: ['sidebar-subscription', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('subscriptions')
+        .select('plan_tier, status')
+        .eq('user_id', user!.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      return data as { plan_tier: string; status: string } | null;
+    },
+  });
+
+  const planLabel = subscription
+    ? `${TIER_LABELS[subscription.plan_tier] ?? subscription.plan_tier} plan`
+    : 'Gratis';
 
   const avatarColor = useMemo(() => getAvatarColor(user?.email), [user?.email]);
   const initial = user?.email?.charAt(0).toUpperCase() ?? '?';
