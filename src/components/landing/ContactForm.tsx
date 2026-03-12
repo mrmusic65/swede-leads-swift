@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import ScrollReveal from './ScrollReveal';
 
 export default function ContactForm() {
@@ -12,16 +13,27 @@ export default function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate send — replace with edge function / email service later
-    await new Promise((r) => setTimeout(r, 800));
-    toast({
-      title: 'Meddelande skickat!',
-      description: 'Vi återkommer inom 24 timmar.',
-    });
-    setName('');
-    setEmail('');
-    setMessage('');
-    setLoading(false);
+    try {
+      const { error } = await supabase
+        .from('contact_messages')
+        .insert({ name: name.trim(), email: email.trim(), message: message.trim() });
+      if (error) throw error;
+      toast({
+        title: 'Meddelande skickat!',
+        description: 'Vi återkommer inom 24 timmar.',
+      });
+      setName('');
+      setEmail('');
+      setMessage('');
+    } catch (err: any) {
+      toast({
+        title: 'Något gick fel',
+        description: err.message ?? 'Försök igen senare.',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const inputStyle: React.CSSProperties = {
