@@ -2,6 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +31,35 @@ function getAvatarColor(email: string | undefined) {
   return AVATAR_COLORS[code % AVATAR_COLORS.length];
 }
 
+const TIER_LABELS: Record<string, string> = {
+  starter: 'Starter',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+};
+
 export default function AppSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
+
+  const { data: subscription } = useQuery({
+    queryKey: ['sidebar-subscription', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from('subscriptions')
+        .select('plan_tier, status')
+        .eq('user_id', user!.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      return data as { plan_tier: string; status: string } | null;
+    },
+  });
+
+  const planLabel = subscription
+    ? `${TIER_LABELS[subscription.plan_tier] ?? subscription.plan_tier} plan`
+    : 'Gratis';
 
   const avatarColor = useMemo(() => getAvatarColor(user?.email), [user?.email]);
   const initial = user?.email?.charAt(0).toUpperCase() ?? '?';
@@ -75,7 +103,7 @@ export default function AppSidebar() {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-sm font-medium text-sidebar-accent-foreground truncate leading-tight">{displayName}</p>
-                <p className="text-[11px] text-sidebar-foreground/60 leading-tight mt-0.5">Pro plan</p>
+                <p className="text-[11px] text-sidebar-foreground/60 leading-tight mt-0.5">{planLabel}</p>
               </div>
               <ChevronsUpDown className="w-4 h-4 shrink-0 text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70 transition-colors" />
             </button>
