@@ -103,7 +103,7 @@ export default function AppSidebar() {
               </div>
               <div className="flex-1 text-left min-w-0">
                 <p className="text-sm font-medium text-sidebar-accent-foreground truncate leading-tight">{displayName}</p>
-                <p className="text-[11px] text-sidebar-foreground/60 leading-tight mt-0.5">Pro plan</p>
+                <p className="text-[11px] text-sidebar-foreground/60 leading-tight mt-0.5">{planLabel}</p>
               </div>
               <ChevronsUpDown className="w-4 h-4 shrink-0 text-sidebar-foreground/40 group-hover:text-sidebar-foreground/70 transition-colors" />
             </button>
