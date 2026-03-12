@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Setting
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
