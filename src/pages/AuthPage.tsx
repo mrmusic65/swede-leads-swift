@@ -91,6 +91,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgot, setIsForgot] = useState(false);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -99,7 +100,14 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      if (isSignUp) {
+      if (isForgot) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast({ title: 'E-post skickad', description: 'Kolla din inbox för en länk att återställa lösenordet.' });
+        setIsForgot(false);
+      } else if (isSignUp) {
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -116,6 +124,18 @@ export default function AuthPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getHeading = () => {
+    if (isForgot) return 'Återställ lösenord';
+    if (isSignUp) return 'Skapa konto';
+    return 'Välkommen tillbaka';
+  };
+
+  const getSubheading = () => {
+    if (isForgot) return 'Ange din e-post så skickar vi en återställningslänk.';
+    if (isSignUp) return 'Kom igång med LeadRadar på några sekunder.';
+    return 'Logga in för att fortsätta till LeadRadar.';
   };
 
   return (
