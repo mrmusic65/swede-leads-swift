@@ -15,6 +15,7 @@ import WatchlistsPage from "./pages/WatchlistsPage";
 import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
 import AuthPage from "./pages/AuthPage";
+import SubscriptionSuccessPage from "./pages/SubscriptionSuccessPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/watchlists" element={<WatchlistsPage />} />
               <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
               <Route path="/subscription" element={<SubscriptionPage />} />
+              <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
