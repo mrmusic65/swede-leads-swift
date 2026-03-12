@@ -50,6 +50,7 @@ const App = () => (
               <Route path="/export" element={<ExportPage />} />
               <Route path="/watchlists" element={<WatchlistsPage />} />
               <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
+              <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />

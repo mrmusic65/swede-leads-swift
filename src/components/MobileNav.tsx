@@ -9,6 +9,7 @@ const navItems = [
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/import', label: 'Import', icon: Upload },
   { to: '/export', label: 'Export', icon: Download },
+  { to: '/subscription', label: 'Prenumeration', icon: CreditCard },
   { to: '/admin', label: 'Admin', icon: Shield },
 ];
 
