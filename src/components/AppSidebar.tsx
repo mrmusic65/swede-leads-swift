@@ -2,7 +2,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo } from 'react';
-import {
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
