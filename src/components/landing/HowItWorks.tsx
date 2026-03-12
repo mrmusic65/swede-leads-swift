@@ -14,7 +14,7 @@ const steps = [
   {
     icon: Rocket,
     title: 'Leads samma dag',
-    desc: 'Du får kvalificerade leads direkt i appen — samma dag de startar.',
+    desc: 'Du får kvalificerade leads direkt i appen samma dag de startar.',
   },
 ];
 
