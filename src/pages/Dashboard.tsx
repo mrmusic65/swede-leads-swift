@@ -20,7 +20,14 @@ export default function Dashboard() {
   const [latestLeads, setLatestLeads] = useState<any[]>([]);
   const [watchlists, setWatchlists] = useState<WatchlistWithCounts[]>([]);
 
-  const userName = user?.user_metadata?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'där';
+  const [firstName, setFirstName] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
+      if (data?.full_name) setFirstName(data.full_name.split(' ')[0]);
+    });
+  }, [user]);
 
   const today = new Date();
   const dateStr = today.toLocaleDateString('sv-SE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
