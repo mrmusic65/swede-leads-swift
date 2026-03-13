@@ -66,12 +66,16 @@ export default function AppSidebar() {
   const displayName = user?.email?.split('@')[0] ?? '';
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 bg-sidebar border-r border-sidebar-border min-h-screen">
-      <div className="flex items-center gap-2 px-5 py-5">
-        <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center">
+    <aside className="hidden lg:flex flex-col w-60 min-h-screen border-r border-sidebar-border"
+      style={{
+        background: 'linear-gradient(180deg, hsl(224 30% 8%) 0%, hsl(224 35% 6%) 100%)',
+      }}
+    >
+      <div className="flex items-center gap-2.5 px-5 py-5">
+        <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center shadow-lg shadow-sidebar-primary/20">
           <Zap className="w-4 h-4 text-sidebar-primary-foreground" />
         </div>
-        <span className="text-base font-semibold text-sidebar-accent-foreground tracking-tight">LeadRadar</span>
+        <span className="text-base font-bold text-sidebar-accent-foreground tracking-tight">LeadRadar</span>
       </div>
 
       <nav className="flex-1 px-3 py-2 space-y-0.5">
@@ -81,14 +85,17 @@ export default function AppSidebar() {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                 active
-                  ? 'bg-sidebar-accent text-sidebar-primary'
+                  ? 'bg-sidebar-primary/15 text-sidebar-primary shadow-sm shadow-sidebar-primary/10'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
               }`}
             >
-              <item.icon className="w-4 h-4" />
+              <item.icon className={`w-4 h-4 ${active ? 'text-sidebar-primary' : ''}`} />
               {item.label}
+              {active && (
+                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
+              )}
             </Link>
           );
         })}
@@ -97,8 +104,8 @@ export default function AppSidebar() {
       <div className="px-3 py-3 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm hover:bg-sidebar-accent transition-colors w-full group">
-              <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-xs font-bold text-white shrink-0`}>
+            <button className="flex items-center gap-3 px-2.5 py-2 rounded-lg text-sm hover:bg-sidebar-accent transition-all duration-150 w-full group">
+              <div className={`w-8 h-8 rounded-full ${avatarColor} flex items-center justify-center text-xs font-bold text-white shrink-0 ring-2 ring-white/10`}>
                 {initial}
               </div>
               <div className="flex-1 text-left min-w-0">

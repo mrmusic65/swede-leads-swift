@@ -43,7 +43,6 @@ export default function Dashboard() {
       setLeadsWeek(weekRes.count ?? 0);
       setLatestLeads(latestRes.data ?? []);
 
-      // Fetch match counts for each watchlist
       const withCounts = await Promise.all(
         wls.slice(0, 5).map(async (w) => {
           try {
@@ -71,32 +70,32 @@ export default function Dashboard() {
   }
 
   const kpis = [
-    { label: 'Nya leads idag', value: leadsToday, icon: Users, color: 'text-primary' },
-    { label: 'Nya leads denna vecka', value: leadsWeek, icon: TrendingUp, color: 'text-primary' },
-    { label: 'Aktiva bevakningar', value: watchlists.length, icon: Eye, color: 'text-primary' },
+    { label: 'Nya leads idag', value: leadsToday, icon: Users, borderClass: 'kpi-border-primary', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+    { label: 'Nya leads denna vecka', value: leadsWeek, icon: TrendingUp, borderClass: 'kpi-border-success', iconBg: 'bg-success/10', iconColor: 'text-success' },
+    { label: 'Aktiva bevakningar', value: watchlists.length, icon: Eye, borderClass: 'kpi-border-info', iconBg: 'bg-info/10', iconColor: 'text-info' },
   ];
 
   return (
     <div className="space-y-8 max-w-4xl animate-fade-in">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
           Välkommen tillbaka, {userName} 👋
         </h1>
-        <p className="text-sm text-muted-foreground mt-1 capitalize">{dateStr}</p>
+        <p className="text-sm text-muted-foreground mt-1.5 capitalize">{dateStr}</p>
       </div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {kpis.map(kpi => (
-          <Card key={kpi.label} className="border">
+          <Card key={kpi.label} className={kpi.borderClass}>
             <CardContent className="pt-6 pb-6 px-6">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">{kpi.label}</p>
-                  <p className="text-4xl font-bold mt-2">{kpi.value}</p>
+                  <p className="text-4xl font-extrabold mt-2 text-foreground">{kpi.value}</p>
                 </div>
-                <div className={`w-10 h-10 rounded-lg bg-secondary flex items-center justify-center ${kpi.color}`}>
+                <div className={`w-10 h-10 rounded-xl ${kpi.iconBg} flex items-center justify-center ${kpi.iconColor}`}>
                   <kpi.icon className="w-5 h-5" />
                 </div>
               </div>
@@ -109,9 +108,9 @@ export default function Dashboard() {
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Senaste leads</CardTitle>
+            <CardTitle className="text-base font-bold">Senaste leads</CardTitle>
             <Link to="/leads">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs hover:bg-accent transition-all duration-150">
                 Visa alla leads <ArrowRight className="w-3 h-3" />
               </Button>
             </Link>
@@ -125,23 +124,23 @@ export default function Dashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left">
-                    <th className="pb-3 font-medium text-muted-foreground">Bolagsnamn</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Bransch</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Stad</th>
-                    <th className="pb-3 font-medium text-muted-foreground text-right">Reg.datum</th>
+                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bolagsnamn</th>
+                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bransch</th>
+                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Stad</th>
+                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-right">Reg.datum</th>
                   </tr>
                 </thead>
                 <tbody>
                   {latestLeads.map(lead => (
-                    <tr key={lead.id} className="border-b last:border-0">
-                      <td className="py-3">
-                        <Link to={`/leads/${lead.id}`} className="font-medium hover:text-primary transition-colors">
+                    <tr key={lead.id} className="border-b last:border-0 hover-row">
+                      <td className="py-3.5">
+                        <Link to={`/leads/${lead.id}`} className="font-medium hover:text-primary transition-colors duration-150">
                           {lead.company_name}
                         </Link>
                       </td>
-                      <td className="py-3 text-muted-foreground">{lead.industry_label || '–'}</td>
-                      <td className="py-3 text-muted-foreground">{lead.city || '–'}</td>
-                      <td className="py-3 text-muted-foreground text-right">{lead.registration_date || '–'}</td>
+                      <td className="py-3.5 text-muted-foreground">{lead.industry_label || '–'}</td>
+                      <td className="py-3.5 text-muted-foreground">{lead.city || '–'}</td>
+                      <td className="py-3.5 text-muted-foreground text-right">{lead.registration_date || '–'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -155,9 +154,9 @@ export default function Dashboard() {
       <Card>
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-semibold">Dina bevakningar</CardTitle>
+            <CardTitle className="text-base font-bold">Dina bevakningar</CardTitle>
             <Link to="/watchlists">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs hover:bg-accent transition-all duration-150">
                 Hantera bevakningar <ArrowRight className="w-3 h-3" />
               </Button>
             </Link>
@@ -172,7 +171,7 @@ export default function Dashboard() {
                 <Link
                   key={w.id}
                   to={`/watchlists/${w.id}`}
-                  className="flex items-center justify-between py-3 px-4 rounded-lg border hover:bg-secondary/50 transition-colors"
+                  className="flex items-center justify-between py-3 px-4 rounded-lg border border-border/50 hover:bg-accent/50 hover:border-primary/20 transition-all duration-150"
                 >
                   <span className="font-medium text-sm">{w.name}</span>
                   <span className="text-sm text-muted-foreground">{w.d7} matchningar (7d)</span>

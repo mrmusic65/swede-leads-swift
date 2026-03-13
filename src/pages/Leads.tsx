@@ -62,8 +62,8 @@ export default function Leads() {
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Leads</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">Leads</h1>
+        <p className="text-muted-foreground mt-1.5">
           Nyregistrerade svenska bolag — uppdateras dagligen
         </p>
       </div>
@@ -114,24 +114,24 @@ export default function Leads() {
         </Select>
 
         <div className="ml-auto">
-          <Button variant="outline" size="sm" className="gap-1.5 h-9" onClick={() => exportCompaniesCSV(filters)}>
+          <Button variant="outline" size="sm" className="gap-1.5 h-9 hover:bg-accent transition-all duration-150" onClick={() => exportCompaniesCSV(filters)}>
             <Download className="w-3.5 h-3.5" /> Exportera CSV
           </Button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="border border-border rounded-lg overflow-hidden bg-card">
+      <div className="rounded-xl glass-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-muted/30">
-                <th className="text-left px-5 py-4 font-medium text-muted-foreground text-xs uppercase tracking-wider">Bolagsnamn</th>
-                <th className="text-left px-5 py-4 font-medium text-muted-foreground text-xs uppercase tracking-wider hidden sm:table-cell">Stad</th>
-                <th className="text-left px-5 py-4 font-medium text-muted-foreground text-xs uppercase tracking-wider hidden md:table-cell">Bransch</th>
-                <th className="text-left px-5 py-4 font-medium text-muted-foreground text-xs uppercase tracking-wider hidden lg:table-cell">Reg. datum</th>
-                <th className="text-center px-5 py-4 font-medium text-muted-foreground text-xs uppercase tracking-wider">Score</th>
-                <th className="text-left px-5 py-4 font-medium text-muted-foreground text-xs uppercase tracking-wider">Status</th>
+              <tr className="border-b border-border bg-muted/20">
+                <th className="text-left px-5 py-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bolagsnamn</th>
+                <th className="text-left px-5 py-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider hidden sm:table-cell">Stad</th>
+                <th className="text-left px-5 py-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider hidden md:table-cell">Bransch</th>
+                <th className="text-left px-5 py-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider hidden lg:table-cell">Reg. datum</th>
+                <th className="text-center px-5 py-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Score</th>
+                <th className="text-left px-5 py-4 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Status</th>
                 <th className="px-5 py-4"></th>
               </tr>
             </thead>
@@ -154,7 +154,7 @@ export default function Leads() {
                   return (
                     <tr
                       key={c.id}
-                      className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors"
+                      className="border-b border-border last:border-0 hover-row"
                     >
                       <td className="px-5 py-5 font-medium text-foreground">
                         {c.company_name}
@@ -177,7 +177,7 @@ export default function Leads() {
                       <td className="px-5 py-5">
                         <Link
                           to={`/leads/${c.id}`}
-                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline transition-colors duration-150"
                         >
                           Visa <ExternalLink className="w-3 h-3" />
                         </Link>
@@ -197,10 +197,10 @@ export default function Leads() {
               Sida {page} av {totalPages} · {totalCount} bolag totalt
             </p>
             <div className="flex gap-1">
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={page <= 1} onClick={() => updateFilters({ page: page - 1 })}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent transition-all duration-150" disabled={page <= 1} onClick={() => updateFilters({ page: page - 1 })}>
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" disabled={page >= totalPages} onClick={() => updateFilters({ page: page + 1 })}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-accent transition-all duration-150" disabled={page >= totalPages} onClick={() => updateFilters({ page: page + 1 })}>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
