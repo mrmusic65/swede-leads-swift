@@ -87,7 +87,7 @@ export default function Dashboard() {
       {/* Welcome */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-          Välkommen tillbaka, {userName} 👋
+          {firstName ? `Välkommen tillbaka, ${firstName} 👋` : 'Välkommen tillbaka! 👋'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1.5 capitalize">{dateStr}</p>
       </div>
