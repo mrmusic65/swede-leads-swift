@@ -19,9 +19,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, Bell, ArrowRight, ChevronDown, Eye, Star, ArrowUpRight, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Bell, ArrowRight, ChevronDown, Eye, Star, ArrowUpRight, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const EVENT_TYPES = [
   { value: 'company_registered', label: 'Nyregistrerat' },
@@ -61,6 +64,9 @@ export default function WatchlistsPage() {
 
   const [name, setName] = useState('');
   const [filters, setFilters] = useState<WatchlistFilters>({});
+  const [notifyEnabled, setNotifyEnabled] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyFrequency, setNotifyFrequency] = useState('instant');
 
   const [cities, setCities] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
@@ -68,6 +74,7 @@ export default function WatchlistsPage() {
   useEffect(() => {
     if (!user) return;
     load();
+    setNotifyEmail(user.email || '');
     Promise.all([fetchDistinctCities(), fetchDistinctIndustries()])
       .then(([c, i]) => { setCities(c); setIndustries(i); });
   }, [user]);
@@ -96,10 +103,17 @@ export default function WatchlistsPage() {
     });
     setCreating(true);
     try {
-      await createWatchlist(user.id, name, cleanFilters);
+      await createWatchlist(user.id, name, cleanFilters, {
+        notification_email: notifyEmail || undefined,
+        notify_enabled: notifyEnabled,
+        notify_frequency: notifyFrequency,
+      });
       setName('');
       setFilters({});
       setAdvancedOpen(false);
+      setNotifyEnabled(true);
+      setNotifyFrequency('instant');
+      setNotifyEmail(user.email || '');
       toast.success('Bevakning skapad');
       await load();
     } catch {
@@ -330,6 +344,43 @@ export default function WatchlistsPage() {
                   </div>
                 </CollapsibleContent>
               </Collapsible>
+
+              {/* Notification settings */}
+              <div className="space-y-4 pt-2 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor="notify-toggle" className="text-sm font-medium">Aktivera e-postnotifikationer</Label>
+                  </div>
+                  <Switch id="notify-toggle" checked={notifyEnabled} onCheckedChange={setNotifyEnabled} />
+                </div>
+
+                {notifyEnabled && (
+                  <div className="space-y-4 pl-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Notifikations-e-post</label>
+                      <Input
+                        type="email"
+                        placeholder={user?.email || 'din@email.se'}
+                        value={notifyEmail}
+                        onChange={e => setNotifyEmail(e.target.value)}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Frekvens</label>
+                      <Select value={notifyFrequency} onValueChange={setNotifyFrequency}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="instant">Direkt</SelectItem>
+                          <SelectItem value="daily">Daglig sammanfattning</SelectItem>
+                          <SelectItem value="weekly">Veckovis sammanfattning</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Create button */}
               <div className="pt-2">
