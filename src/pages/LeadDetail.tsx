@@ -274,9 +274,25 @@ export default function LeadDetail() {
     { icon: Globe, label: 'Hemsida', value: company.website_url || '—' },
   ];
 
-  const aiButtons: { type: ContentType; label: string; icon: typeof Mail; variant: 'default' | 'outline' }[] = [
-    { type: 'cold_email', label: 'Generera kall e-post', icon: Mail, variant: 'default' },
-    { type: 'dm', label: 'Generera DM', icon: MessageSquare, variant: 'outline' },
+  const handleCopyContactInfo = async () => {
+    if (!company) return;
+    const lines = [
+      `Bolagsnamn: ${company.company_name}`,
+      `Org.nummer: ${company.org_number || '—'}`,
+      `Telefon: ${company.phone_number || '—'}`,
+      `Adress: ${[company.address, company.postal_code, company.city].filter(Boolean).join(', ') || '—'}`,
+      `Bransch: ${company.industry_label || '—'}`,
+      `Stad: ${company.city || '—'}`,
+    ].join('\n');
+    await navigator.clipboard.writeText(lines);
+    setCopiedContactInfo(true);
+    setTimeout(() => setCopiedContactInfo(false), 2000);
+  };
+
+  const [copiedContactInfo, setCopiedContactInfo] = useState(false);
+
+  const aiButtons: { type: ContentType; label: string; icon: typeof Megaphone; variant: 'default' | 'outline' }[] = [
+    { type: 'call_script', label: 'Kallsamtalsmanus', icon: PhoneCall, variant: 'default' },
     { type: 'sales_pitch', label: 'Generera säljpitch', icon: Megaphone, variant: 'outline' },
   ];
 
