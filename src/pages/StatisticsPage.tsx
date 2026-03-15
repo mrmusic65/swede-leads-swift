@@ -103,6 +103,21 @@ export default function StatisticsPage() {
 
   const pipelineData = PIPELINE_STAGES.map(s => ({ name: s.label, value: pipelineCounts[s.id] || 0, fill: s.color }));
 
+  const scoreDistribution = useMemo(() => {
+    const buckets = [
+      { range: '0–20', min: 0, max: 20, count: 0 },
+      { range: '20–40', min: 20, max: 40, count: 0 },
+      { range: '40–60', min: 40, max: 60, count: 0 },
+      { range: '60–80', min: 60, max: 80, count: 0 },
+      { range: '80–100', min: 80, max: 101, count: 0 },
+    ];
+    scores.forEach(s => {
+      const bucket = buckets.find(b => s >= b.min && s < b.max);
+      if (bucket) bucket.count++;
+    });
+    return buckets;
+  }, [scores]);
+
   const isEmpty = companies.length === 0;
 
   if (loading) {
