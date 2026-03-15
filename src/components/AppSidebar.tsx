@@ -63,12 +63,12 @@ export default function AppSidebar() {
     queryKey: ['sidebar-profile', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('profiles')
-        .select('full_name')
+        .select('full_name, display_name')
         .eq('id', user!.id)
         .single();
-      return data;
+      return data as { full_name: string | null; display_name: string | null } | null;
     },
   });
 
