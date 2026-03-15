@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchWatchlists, fetchWatchlistMatchCounts, type SavedWatchlist } from '@/lib/watchlist-api';
 import { fetchNotesTodayCount, fetchLeadNoteCounts } from '@/lib/lead-notes-api';
-import { Users, TrendingUp, Eye, ArrowRight, MessageSquare, StickyNote } from 'lucide-react';
+import { Users, TrendingUp, Eye, ArrowRight, MessageSquare, StickyNote, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
