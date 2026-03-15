@@ -39,7 +39,9 @@ export default function Leads() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<Company | null>(null);
   const [cities, setCities] = useState<string[]>([]);
+  const [industries, setIndustries] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
 
   const [filters, setFilters] = useState<LeadFilters>({
