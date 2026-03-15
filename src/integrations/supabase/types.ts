@@ -444,6 +444,7 @@ export type Database = {
         Row: {
           created_at: string
           default_notify_frequency: string
+          display_name: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -454,6 +455,7 @@ export type Database = {
         Insert: {
           created_at?: string
           default_notify_frequency?: string
+          display_name?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -464,6 +466,7 @@ export type Database = {
         Update: {
           created_at?: string
           default_notify_frequency?: string
+          display_name?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
