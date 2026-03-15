@@ -90,9 +90,9 @@ export default function LeadSlideOver({ company, open, onClose, onStatusChange }
     finally { setSaving(false); }
   }, [company, user, newNote]);
 
-  const handleExport = useCallback(() => {
+  const handleExport = useCallback(async () => {
     if (!company) return;
-    const { exportSelectedCompaniesCSV } = require('@/lib/api');
+    const { exportSelectedCompaniesCSV } = await import('@/lib/api');
     exportSelectedCompaniesCSV([company]);
   }, [company]);
 
