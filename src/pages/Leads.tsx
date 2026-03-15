@@ -42,7 +42,6 @@ export default function Leads() {
   const [selectedLead, setSelectedLead] = useState<Company | null>(null);
   const [cities, setCities] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
-  const [industries, setIndustries] = useState<string[]>([]);
 
   const [filters, setFilters] = useState<LeadFilters>({
     sortBy: 'created_at',
