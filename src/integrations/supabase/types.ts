@@ -437,6 +437,7 @@ export type Database = {
           created_at: string
           filter_json: Json
           id: string
+          is_default: boolean
           name: string
           user_id: string
         }
@@ -444,6 +445,7 @@ export type Database = {
           created_at?: string
           filter_json?: Json
           id?: string
+          is_default?: boolean
           name: string
           user_id: string
         }
@@ -451,6 +453,7 @@ export type Database = {
           created_at?: string
           filter_json?: Json
           id?: string
+          is_default?: boolean
           name?: string
           user_id?: string
         }
