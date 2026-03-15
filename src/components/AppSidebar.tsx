@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown } from 'lucide-react';
+import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown, KanbanSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +16,7 @@ import {
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
+  { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/export', label: 'Exportera', icon: Download },
 ];

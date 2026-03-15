@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, KanbanSquare } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
+  { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/export', label: 'Exportera', icon: Download },
 ];

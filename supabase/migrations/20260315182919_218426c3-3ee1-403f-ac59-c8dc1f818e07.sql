@@ -1,0 +1,1 @@
+ALTER TABLE public.companies ADD COLUMN pipeline_stage text NOT NULL DEFAULT 'new';
