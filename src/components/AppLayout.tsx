@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import MobileNav from './MobileNav';
 import OnboardingModal from './OnboardingModal';
