@@ -2,6 +2,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { fetchCompanyById, fetchNotes, addNote, calculateLeadScore, type Company, type Note } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import ScoreBadge from '@/components/ScoreBadge';
 import ScoreGauge from '@/components/ScoreGauge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
@@ -10,8 +11,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, MessageSquare, Monitor, Building2, MapPin, Calendar, Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Mail, MessageSquare, Megaphone, Building2, MapPin, Calendar, Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check, Loader2, RefreshCw, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+
+type ContentType = 'cold_email' | 'dm' | 'sales_pitch';
+
+const TYPE_LABELS: Record<ContentType, string> = {
+  cold_email: 'Kall e-post',
+  dm: 'LinkedIn DM',
+  sales_pitch: 'Säljpitch',
+};
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -24,6 +33,11 @@ export default function LeadDetail() {
   const [saving, setSaving] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
   const [copiedInfo, setCopiedInfo] = useState(false);
+
+  // AI generation state
+  const [generating, setGenerating] = useState<ContentType | null>(null);
+  const [generatedContent, setGeneratedContent] = useState<{ type: ContentType; content: string } | null>(null);
+  const [copiedContent, setCopiedContent] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -47,6 +61,54 @@ export default function LeadDetail() {
   }
 
   const score = calculateLeadScore(company);
+
+  const handleGenerate = async (type: ContentType) => {
+    if (!user || !company) return;
+    setGenerating(type);
+    setGeneratedContent(null);
+    setCopiedContent(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-lead-content', {
+        body: {
+          type,
+          lead: {
+            company_name: company.company_name,
+            industry: company.industry_label,
+            city: company.city,
+            company_form: company.company_form,
+            registration_date: company.registration_date,
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const content = data.content;
+      setGeneratedContent({ type, content });
+
+      // Save to database
+      await (supabase as any).from('lead_content').insert({
+        lead_id: company.id,
+        user_id: user.id,
+        type,
+        content,
+      });
+    } catch (e: any) {
+      toast({ title: 'Fel', description: e.message || 'Kunde inte generera innehåll.', variant: 'destructive' });
+    } finally {
+      setGenerating(null);
+    }
+  };
+
+  const handleCopyContent = async () => {
+    if (!generatedContent) return;
+    await navigator.clipboard.writeText(generatedContent.content);
+    setCopiedContent(true);
+    setTimeout(() => setCopiedContent(false), 2000);
+    toast({ title: 'Kopierat', description: 'Texten har kopierats.' });
+  };
 
   const handleAddNote = async () => {
     if (!newNote.trim() || !user) return;
@@ -85,7 +147,6 @@ export default function LeadDetail() {
     toast({ title: 'Kopierat', description: 'Bolagsinformation kopierad.' });
   };
 
-
   const infoItems = [
     { icon: Hash, label: 'Org.nummer', value: company.org_number },
     { icon: Briefcase, label: 'Bolagsform', value: company.company_form || '—' },
@@ -94,6 +155,12 @@ export default function LeadDetail() {
     { icon: MapPin, label: 'Adress', value: [company.address, company.postal_code, company.city].filter(Boolean).join(', ') || '—' },
     { icon: MapPin, label: 'Kommun / Län', value: [company.municipality, company.county].filter(Boolean).join(', ') || '—' },
     { icon: Globe, label: 'Hemsida', value: company.website_url || '—' },
+  ];
+
+  const aiButtons: { type: ContentType; label: string; icon: typeof Mail; variant: 'default' | 'outline' }[] = [
+    { type: 'cold_email', label: 'Generera kall e-post', icon: Mail, variant: 'default' },
+    { type: 'dm', label: 'Generera DM', icon: MessageSquare, variant: 'outline' },
+    { type: 'sales_pitch', label: 'Generera säljpitch', icon: Megaphone, variant: 'outline' },
   ];
 
   return (
@@ -131,7 +198,6 @@ export default function LeadDetail() {
                 </div>
               </div>
             ))}
-            {/* Phone with copy button */}
             <div className="flex items-start gap-2.5">
               <Phone className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <div className="flex-1">
@@ -161,11 +227,68 @@ export default function LeadDetail() {
         </Card>
       </div>
 
+      {/* AI Generation Buttons */}
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" className="gap-1.5"><Mail className="w-3.5 h-3.5" /> Generera kall e-post</Button>
-        <Button size="sm" variant="outline" className="gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> Generera DM</Button>
-        <Button size="sm" variant="outline" className="gap-1.5"><Monitor className="w-3.5 h-3.5" /> Generera webbpitch</Button>
+        {aiButtons.map(btn => (
+          <Button
+            key={btn.type}
+            size="sm"
+            variant={btn.variant}
+            className="gap-1.5"
+            disabled={generating !== null}
+            onClick={() => handleGenerate(btn.type)}
+          >
+            {generating === btn.type ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <btn.icon className="w-3.5 h-3.5" />
+            )}
+            {generating === btn.type ? 'Genererar...' : btn.label}
+          </Button>
+        ))}
       </div>
+
+      {/* Generated Content Display */}
+      {generatedContent && (
+        <Card className="border-primary/20 bg-primary/[0.02]">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                {TYPE_LABELS[generatedContent.type]}
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 w-7 p-0"
+                onClick={() => setGeneratedContent(null)}
+              >
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="text-sm whitespace-pre-wrap leading-relaxed rounded-lg bg-background p-4 border border-border">
+              {generatedContent.content}
+            </div>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs" onClick={handleCopyContent}>
+                {copiedContent ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copiedContent ? 'Kopierat!' : 'Kopiera'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-8 text-xs"
+                disabled={generating !== null}
+                onClick={() => handleGenerate(generatedContent.type)}
+              >
+                <RefreshCw className="w-3 h-3" />
+                Regenerera
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader className="pb-3">
