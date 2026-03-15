@@ -44,6 +44,7 @@ export default function ExportPage() {
   const [lastExported, setLastExported] = useState<string | null>(
     localStorage.getItem('last_export_date')
   );
+  const [isTrialing, setIsTrialing] = useState(false);
 
   useEffect(() => {
     supabase
@@ -64,11 +65,18 @@ export default function ExportPage() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           const tier = data[0].plan_tier;
-          const label = tier.charAt(0).toUpperCase() + tier.slice(1) + ' plan';
-          setPlanName(data[0].status === 'trialing' ? `${label} · Testperiod` : label);
+          setPlanName(tier.charAt(0).toUpperCase() + tier.slice(1) + ' plan');
+          setIsTrialing(data[0].status === 'trialing');
         }
       });
   }, [user]);
+
+  const formatExportDate = (dateStr: string | null): string => {
+    if (!dateStr) return 'Aldrig';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Aldrig';
+    return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
 
   const toggleColumn = (key: string) => {
     setSelectedColumns(prev => {
