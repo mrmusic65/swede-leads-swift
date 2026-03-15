@@ -44,6 +44,7 @@ export default function ExportPage() {
   const [lastExported, setLastExported] = useState<string | null>(
     localStorage.getItem('last_export_date')
   );
+  const [isTrialing, setIsTrialing] = useState(false);
 
   useEffect(() => {
     supabase
@@ -64,11 +65,18 @@ export default function ExportPage() {
       .then(({ data }) => {
         if (data && data.length > 0) {
           const tier = data[0].plan_tier;
-          const label = tier.charAt(0).toUpperCase() + tier.slice(1) + ' plan';
-          setPlanName(data[0].status === 'trialing' ? `${label} · Testperiod` : label);
+          setPlanName(tier.charAt(0).toUpperCase() + tier.slice(1) + ' plan');
+          setIsTrialing(data[0].status === 'trialing');
         }
       });
   }, [user]);
+
+  const formatExportDate = (dateStr: string | null): string => {
+    if (!dateStr) return 'Aldrig';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return 'Aldrig';
+    return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
 
   const toggleColumn = (key: string) => {
     setSelectedColumns(prev => {
@@ -184,38 +192,43 @@ export default function ExportPage() {
 
       {/* Info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-5 pb-5 flex items-center gap-4">
+        <Card className="flex">
+          <CardContent className="pt-5 pb-5 flex items-center gap-4 flex-1">
             <div className="p-2.5 rounded-lg bg-primary/10">
               <Database className="w-5 h-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{totalLeads.toLocaleString('sv-SE')}</p>
-              <p className="text-xs text-muted-foreground">Totalt antal leads</p>
+              <p className="text-sm text-muted-foreground">Totalt antal leads</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-5 pb-5 flex items-center gap-4">
+        <Card className="flex">
+          <CardContent className="pt-5 pb-5 flex items-center gap-4 flex-1">
             <div className="p-2.5 rounded-lg bg-primary/10">
               <Clock className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{lastExported ?? '—'}</p>
-              <p className="text-xs text-muted-foreground">Senast exporterat</p>
+              <p className="text-2xl font-bold text-foreground">{formatExportDate(lastExported)}</p>
+              <p className="text-sm text-muted-foreground">Senast exporterat</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-5 pb-5 flex items-center gap-4">
+        <Card className="flex">
+          <CardContent className="pt-5 pb-5 flex items-center gap-4 flex-1">
             <div className="p-2.5 rounded-lg bg-primary/10">
               <CreditCard className="w-5 h-5 text-primary" />
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{planName}</p>
-              <p className="text-xs text-muted-foreground">Din plan</p>
+              {isTrialing && (
+                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                  Testperiod
+                </span>
+              )}
+              <p className="text-sm text-muted-foreground">Din plan</p>
             </div>
           </CardContent>
         </Card>
