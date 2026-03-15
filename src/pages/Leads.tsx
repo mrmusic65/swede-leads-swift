@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { fetchCompanies, fetchDistinctCities, fetchDistinctIndustries, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
 import LeadStatusBadge from '@/components/LeadStatusBadge';
 import IndustryBadge from '@/components/IndustryBadge';
+import LeadSlideOver from '@/components/LeadSlideOver';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ export default function Leads() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedLead, setSelectedLead] = useState<Company | null>(null);
   const [cities, setCities] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
 
@@ -215,16 +216,16 @@ export default function Leads() {
                     return (
                       <tr
                         key={c.id}
-                        className={`border-b border-border last:border-0 transition-colors duration-150 hover:bg-accent/40 ${isEven ? 'bg-muted/15' : ''}`}
+                        className={`border-b border-border last:border-0 transition-colors duration-150 hover:bg-accent/40 ${isEven ? 'bg-muted/15' : ''} ${selectedLead?.id === c.id ? 'border-l-2 border-l-primary bg-accent/30' : ''}`}
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
-                            <Link
-                              to={`/leads/${c.id}`}
-                              className="font-medium text-foreground hover:text-primary hover:underline underline-offset-2 transition-colors duration-150"
+                            <button
+                              onClick={() => setSelectedLead(c)}
+                              className="font-medium text-foreground hover:text-primary hover:underline underline-offset-2 transition-colors duration-150 cursor-pointer text-left"
                             >
                               {c.company_name}
-                            </Link>
+                            </button>
                             {isNewLead(c.registration_date) && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -261,12 +262,12 @@ export default function Leads() {
                         <td className="px-5 py-4">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Link
-                                to={`/leads/${c.id}`}
+                              <button
+                                onClick={() => setSelectedLead(c)}
                                 className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-primary hover:bg-accent transition-all duration-150"
                               >
                                 <ExternalLink className="w-4 h-4" />
-                              </Link>
+                              </button>
                             </TooltipTrigger>
                             <TooltipContent side="left" className="text-xs">
                               Visa detaljer
@@ -299,6 +300,15 @@ export default function Leads() {
           </div>
         )}
       </div>
+
+      <LeadSlideOver
+        company={selectedLead}
+        open={!!selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onStatusChange={(id, status) => {
+          setCompanies(prev => prev.map(c => c.id === id ? { ...c, lead_status: status } as Company : c));
+        }}
+      />
     </div>
   );
 }
