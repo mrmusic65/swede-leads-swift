@@ -14,15 +14,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   ArrowLeft, Megaphone, Building2, MapPin, Calendar,
   Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check, Loader2, RefreshCw,
-  X, Save, ChevronDown, ChevronUp, Clock, PhoneCall, ClipboardList, Info
+  X, Save, ChevronDown, ChevronUp, Clock, ClipboardList, Info,
+  Search, Lightbulb, Zap
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type ContentType = 'call_script' | 'sales_pitch';
+type ContentType = 'sales_pitch';
+type ResearchResult = { points: string[]; usage: { current: number; limit: number; plan: string } };
 
-const TYPE_LABELS: Record<ContentType, string> = {
-  call_script: 'Kallsamtalsmanus',
+const TYPE_LABELS: Record<string, string> = {
   sales_pitch: 'Säljpitch',
+  research: 'Research',
+};
+
+const PLAN_LIMITS: Record<string, number> = {
+  starter: 25,
+  pro: 100,
+  enterprise: -1,
 };
 
 interface SavedContent {
@@ -45,15 +53,47 @@ export default function LeadDetail() {
   const [copiedInfo, setCopiedInfo] = useState(false);
   const [copiedContactInfo, setCopiedContactInfo] = useState(false);
 
-  // AI generation state
+  // AI generation state (sales pitch)
   const [generating, setGenerating] = useState<ContentType | null>(null);
   const [generatedContent, setGeneratedContent] = useState<{ type: ContentType; content: string } | null>(null);
   const [editableContent, setEditableContent] = useState('');
   const [copiedContent, setCopiedContent] = useState(false);
 
+  // Research state
+  const [researching, setResearching] = useState(false);
+  const [researchResult, setResearchResult] = useState<ResearchResult | null>(null);
+  const [copiedResearch, setCopiedResearch] = useState(false);
+  const [searchUsage, setSearchUsage] = useState<{ current: number; limit: number; plan: string } | null>(null);
+
   // Previous content history
   const [previousContent, setPreviousContent] = useState<SavedContent[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+
+  const currentMonth = new Date().toISOString().slice(0, 7);
+
+  const loadSearchUsage = useCallback(async () => {
+    if (!user) return;
+    const { data } = await (supabase as any)
+      .from('search_usage')
+      .select('count')
+      .eq('user_id', user.id)
+      .eq('month', currentMonth)
+      .single();
+
+    // Get plan
+    const { data: sub } = await (supabase as any)
+      .from('subscriptions')
+      .select('plan_tier, status')
+      .eq('user_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const plan = sub?.plan_tier || 'starter';
+    const limit = PLAN_LIMITS[plan] ?? 25;
+    setSearchUsage({ current: data?.count || 0, limit, plan });
+  }, [user, currentMonth]);
 
   const loadPreviousContent = useCallback(async (leadId: string) => {
     const { data } = await (supabase as any)
@@ -73,11 +113,10 @@ export default function LeadDetail() {
     loadPreviousContent(id);
   }, [id]);
 
-  // Sync editable content when generated content changes
+  useEffect(() => { loadSearchUsage(); }, [loadSearchUsage]);
+
   useEffect(() => {
-    if (generatedContent) {
-      setEditableContent(generatedContent.content);
-    }
+    if (generatedContent) setEditableContent(generatedContent.content);
   }, [generatedContent]);
 
   if (loading) {
@@ -95,6 +134,71 @@ export default function LeadDetail() {
 
   const score = calculateLeadScore(company);
 
+  // Research handler
+  const handleResearch = async () => {
+    if (!user || !company) return;
+
+    if (searchUsage && searchUsage.limit !== -1 && searchUsage.current >= searchUsage.limit) {
+      return; // limit reached, button is disabled
+    }
+
+    setResearching(true);
+    setResearchResult(null);
+    setCopiedResearch(false);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('research-lead', {
+        body: {
+          lead: {
+            company_name: company.company_name,
+            city: company.city,
+            industry: company.industry_label,
+            org_number: company.org_number,
+          },
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error === 'limit_reached') {
+        setSearchUsage({ current: data.current, limit: data.limit, plan: data.plan });
+        toast({ title: 'Sökgräns nådd', description: data.message, variant: 'destructive' });
+        return;
+      }
+      if (data?.error) throw new Error(data.error);
+
+      const content = data.content as string;
+      const points = content
+        .split(/\n/)
+        .map((l: string) => l.replace(/^\d+\.\s*/, '').trim())
+        .filter((l: string) => l.length > 5);
+
+      setResearchResult({ points, usage: data.usage });
+      setSearchUsage(data.usage);
+
+      // Save to lead_content
+      await (supabase as any).from('lead_content').insert({
+        lead_id: company.id,
+        user_id: user.id,
+        type: 'research',
+        content,
+      });
+      loadPreviousContent(company.id);
+    } catch (e: any) {
+      toast({ title: 'Fel', description: e.message || 'Kunde inte researcha bolaget.', variant: 'destructive' });
+    } finally {
+      setResearching(false);
+    }
+  };
+
+  const handleCopyResearch = async () => {
+    if (!researchResult) return;
+    const text = researchResult.points.map((p, i) => `${i + 1}. ${p}`).join('\n');
+    await navigator.clipboard.writeText(text);
+    setCopiedResearch(true);
+    setTimeout(() => setCopiedResearch(false), 2000);
+  };
+
+  // Sales pitch generation
   const handleGenerate = async (type: ContentType) => {
     if (!user || !company) return;
     setGenerating(type);
@@ -118,18 +222,14 @@ export default function LeadDetail() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      const content = data.content;
-      setGeneratedContent({ type, content });
+      setGeneratedContent({ type, content: data.content });
 
-      // Save to database
       await (supabase as any).from('lead_content').insert({
         lead_id: company.id,
         user_id: user.id,
         type,
-        content,
+        content: data.content,
       });
-
-      // Refresh history
       loadPreviousContent(company.id);
     } catch (e: any) {
       toast({ title: 'Fel', description: e.message || 'Kunde inte generera innehåll.', variant: 'destructive' });
@@ -147,86 +247,42 @@ export default function LeadDetail() {
 
   const showMoveToContactedToast = () => {
     if (!company || company.pipeline_stage !== 'new') return;
-
     toast({
       title: `Vill du flytta ${company.company_name} till Kontaktad?`,
       description: '',
       duration: 10000,
       action: (
         <div className="flex gap-2 mt-1">
-          <Button
-            size="sm"
-            variant="default"
-            className="h-7 text-xs"
-            onClick={async () => {
-              await (supabase as any)
-                .from('companies')
-                .update({ pipeline_stage: 'contacted' })
-                .eq('id', company.id);
-
-              // Log activity
-              if (user) {
-                await (supabase as any).from('lead_activity').insert({
-                  lead_id: company.id,
-                  user_id: user.id,
-                  action: 'status_changed',
-                  old_value: 'Ny',
-                  new_value: 'Kontaktad',
-                });
-              }
-
-              setCompany({ ...company, pipeline_stage: 'contacted' });
-              toast({ title: 'Uppdaterat', description: `${company.company_name} flyttad till Kontaktad.` });
-            }}
-          >
-            Ja, flytta
-          </Button>
-          <Button size="sm" variant="outline" className="h-7 text-xs">
-            Behåll som Ny
-          </Button>
+          <Button size="sm" variant="default" className="h-7 text-xs" onClick={async () => {
+            await (supabase as any).from('companies').update({ pipeline_stage: 'contacted' }).eq('id', company.id);
+            if (user) {
+              await (supabase as any).from('lead_activity').insert({
+                lead_id: company.id, user_id: user.id, action: 'status_changed',
+                old_value: 'Ny', new_value: 'Kontaktad',
+              });
+            }
+            setCompany({ ...company, pipeline_stage: 'contacted' });
+            toast({ title: 'Uppdaterat', description: `${company.company_name} flyttad till Kontaktad.` });
+          }}>Ja, flytta</Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs">Behåll som Ny</Button>
         </div>
       ),
     });
   };
 
-  const handlePrimaryAction = async () => {
-    if (!generatedContent || !company) return;
-
-    const type = generatedContent.type;
-
-    if (type === 'call_script') {
-      if (company.phone_number) {
-        window.open(`tel:${company.phone_number}`, '_self');
-      } else {
-        toast({ title: 'Inget telefonnummer', description: 'Det finns inget telefonnummer registrerat för detta bolag.', variant: 'destructive' });
-        return;
-      }
-    } else if (type === 'sales_pitch') {
-      if (!user) return;
-      try {
-        const noteText = `Säljpitch: ${editableContent}`;
-        const note = await addNote(company.id, user.id, noteText);
-        setNotes(prev => [...prev, note]);
-        toast({ title: 'Sparat', description: 'Säljpitchen har sparats som anteckning.' });
-      } catch {
-        toast({ title: 'Fel', description: 'Kunde inte spara anteckning.', variant: 'destructive' });
-        return;
-      }
+  const handleSaveToNotes = async () => {
+    if (!generatedContent || !company || !user) return;
+    try {
+      const noteText = `Säljpitch: ${editableContent}`;
+      const note = await addNote(company.id, user.id, noteText);
+      setNotes(prev => [...prev, note]);
+      toast({ title: 'Sparat', description: 'Säljpitchen har sparats som anteckning.' });
+    } catch {
+      toast({ title: 'Fel', description: 'Kunde inte spara anteckning.', variant: 'destructive' });
+      return;
     }
-
     showMoveToContactedToast();
   };
-
-  const getPrimaryActionButton = () => {
-    if (!generatedContent) return null;
-    switch (generatedContent.type) {
-      case 'call_script':
-        return { label: 'Ring nu', icon: PhoneCall };
-      case 'sales_pitch':
-        return { label: 'Spara till anteckningar', icon: Save };
-    }
-  };
-
 
   const handleAddNote = async () => {
     if (!newNote.trim() || !user) return;
@@ -265,18 +321,7 @@ export default function LeadDetail() {
     toast({ title: 'Kopierat', description: 'Bolagsinformation kopierad.' });
   };
 
-  const infoItems = [
-    { icon: Hash, label: 'Org.nummer', value: company.org_number },
-    { icon: Briefcase, label: 'Bolagsform', value: company.company_form || '—' },
-    { icon: Calendar, label: 'Registrerad', value: company.registration_date || '—' },
-    { icon: Building2, label: 'Bransch', value: company.industry_label || '—' },
-    { icon: MapPin, label: 'Adress', value: [company.address, company.postal_code, company.city].filter(Boolean).join(', ') || '—' },
-    { icon: MapPin, label: 'Kommun / Län', value: [company.municipality, company.county].filter(Boolean).join(', ') || '—' },
-    { icon: Globe, label: 'Hemsida', value: company.website_url || '—' },
-  ];
-
   const handleCopyContactInfo = async () => {
-    if (!company) return;
     const lines = [
       `Bolagsnamn: ${company.company_name}`,
       `Org.nummer: ${company.org_number || '—'}`,
@@ -290,14 +335,22 @@ export default function LeadDetail() {
     setTimeout(() => setCopiedContactInfo(false), 2000);
   };
 
-  // copiedContactInfo state is declared at top
-
-  const aiButtons: { type: ContentType; label: string; icon: typeof Megaphone; variant: 'default' | 'outline' }[] = [
-    { type: 'call_script', label: 'Kallsamtalsmanus', icon: PhoneCall, variant: 'default' },
-    { type: 'sales_pitch', label: 'Generera säljpitch', icon: Megaphone, variant: 'outline' },
+  const infoItems = [
+    { icon: Hash, label: 'Org.nummer', value: company.org_number },
+    { icon: Briefcase, label: 'Bolagsform', value: company.company_form || '—' },
+    { icon: Calendar, label: 'Registrerad', value: company.registration_date || '—' },
+    { icon: Building2, label: 'Bransch', value: company.industry_label || '—' },
+    { icon: MapPin, label: 'Adress', value: [company.address, company.postal_code, company.city].filter(Boolean).join(', ') || '—' },
+    { icon: MapPin, label: 'Kommun / Län', value: [company.municipality, company.county].filter(Boolean).join(', ') || '—' },
+    { icon: Globe, label: 'Hemsida', value: company.website_url || '—' },
   ];
 
-  const primaryAction = getPrimaryActionButton();
+  const limitReached = searchUsage && searchUsage.limit !== -1 && searchUsage.current >= searchUsage.limit;
+  const searchesRemaining = searchUsage
+    ? searchUsage.limit === -1
+      ? '∞'
+      : `${searchUsage.limit - searchUsage.current}`
+    : '...';
 
   return (
     <div className="space-y-6 max-w-4xl animate-fade-in">
@@ -341,12 +394,8 @@ export default function LeadDetail() {
                 <div className="flex items-center gap-1.5">
                   <p className="text-sm font-medium">{company.phone_number || '—'}</p>
                   {company.phone_number && (
-                    <button
-                      onClick={handleCopyPhone}
-                      className="inline-flex items-center justify-center w-5 h-5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-                      title="Kopiera telefonnummer"
-                    >
-                      {copiedPhone ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
+                    <button onClick={handleCopyPhone} className="inline-flex items-center justify-center w-5 h-5 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors" title="Kopiera telefonnummer">
+                      {copiedPhone ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                     </button>
                   )}
                 </div>
@@ -363,26 +412,29 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      {/* AI Generation & Action Buttons */}
+      {/* Action Buttons */}
       <div className="space-y-2">
         <div className="flex flex-wrap gap-2">
-          {aiButtons.map(btn => (
-            <Button
-              key={btn.type}
-              size="sm"
-              variant={generatedContent?.type === btn.type ? 'default' : btn.variant}
-              className="gap-1.5"
-              disabled={generating !== null}
-              onClick={() => handleGenerate(btn.type)}
-            >
-              {generating === btn.type ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <btn.icon className="w-3.5 h-3.5" />
-              )}
-              {generating === btn.type ? 'Genererar...' : btn.label}
-            </Button>
-          ))}
+          <Button
+            size="sm"
+            variant="default"
+            className="gap-1.5"
+            disabled={researching || !!limitReached}
+            onClick={handleResearch}
+          >
+            {researching ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Search className="w-3.5 h-3.5" />}
+            {researching ? 'Söker...' : 'Researcha bolaget'}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            disabled={generating !== null}
+            onClick={() => handleGenerate('sales_pitch')}
+          >
+            {generating === 'sales_pitch' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Megaphone className="w-3.5 h-3.5" />}
+            {generating === 'sales_pitch' ? 'Genererar...' : 'Generera säljpitch'}
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -393,26 +445,104 @@ export default function LeadDetail() {
             {copiedContactInfo ? 'Kopierat!' : 'Kopiera kontaktinfo'}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground flex items-center gap-1">
-          <Info className="w-3 h-3 shrink-0" />
-          E-postadresser till beslutsfattare kommer inom kort via vår Creditsafe-integration.
-        </p>
+        <div className="flex flex-col gap-1">
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Search className="w-3 h-3 shrink-0" />
+            {limitReached
+              ? <span className="text-destructive font-medium">Alla sökningar förbrukade denna månad</span>
+              : <span>{searchesRemaining} sökningar kvar denna månad</span>
+            }
+          </p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <Info className="w-3 h-3 shrink-0" />
+            E-postadresser till beslutsfattare kommer inom kort via vår Creditsafe-integration.
+          </p>
+        </div>
       </div>
 
-      {/* Generated Content Display */}
-      {generatedContent && (
+      {/* Limit Reached Upgrade CTA */}
+      {limitReached && (
+        <Card className="border-destructive/30 bg-destructive/5">
+          <CardContent className="py-4">
+            <p className="text-sm font-medium mb-2">
+              Du har använt alla dina sökningar för denna månad.
+              {searchUsage?.plan === 'starter' && ' Uppgradera till Pro för 100 sökningar/månad.'}
+            </p>
+            <Link to="/subscription">
+              <Button size="sm" variant="default" className="gap-1.5">
+                <Zap className="w-3.5 h-3.5" />
+                Uppgradera
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Research Loading */}
+      {researching && (
+        <Card className="border-primary/20 bg-primary/[0.02]">
+          <CardContent className="py-6 flex items-center justify-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Söker efter information om {company.company_name}...</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Research Results */}
+      {researchResult && !researching && (
         <Card className="border-primary/20 bg-primary/[0.02]">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                {TYPE_LABELS[generatedContent.type]}
+                <Lightbulb className="w-4 h-4 text-teal-500" />
+                Säljargument
               </CardTitle>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setResearchResult(null)}>
+                <X className="w-3.5 h-3.5" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <ul className="space-y-2.5">
+              {researchResult.points.map((point, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <Lightbulb className="w-4 h-4 text-teal-500 mt-0.5 shrink-0" />
+                  <p className="text-sm leading-relaxed">{point}</p>
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-2 pt-1">
               <Button
                 size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0"
-                onClick={() => setGeneratedContent(null)}
+                variant="outline"
+                className={`gap-1.5 h-8 text-xs transition-colors ${copiedResearch ? 'border-emerald-500 text-emerald-600' : ''}`}
+                onClick={handleCopyResearch}
               >
+                {copiedResearch ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                {copiedResearch ? 'Kopierat!' : 'Kopiera alla punkter'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                className="gap-1.5 h-8 text-xs"
+                disabled={researching || !!limitReached}
+                onClick={handleResearch}
+              >
+                <RefreshCw className="w-3 h-3" />
+                Sök igen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Generated Sales Pitch */}
+      {generatedContent && (
+        <Card className="border-primary/20 bg-primary/[0.02]">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold">{TYPE_LABELS[generatedContent.type]}</CardTitle>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setGeneratedContent(null)}>
                 <X className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -424,35 +554,16 @@ export default function LeadDetail() {
               className="min-h-[160px] text-sm leading-relaxed bg-background border-border resize-y"
             />
             <div className="flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                className={`gap-1.5 h-8 text-xs transition-colors ${copiedContent ? 'border-emerald-500 text-emerald-600' : ''}`}
-                onClick={handleCopyContent}
-              >
-                {copiedContent ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
+              <Button size="sm" variant="outline" className={`gap-1.5 h-8 text-xs transition-colors ${copiedContent ? 'border-emerald-500 text-emerald-600' : ''}`} onClick={handleCopyContent}>
+                {copiedContent ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                 {copiedContent ? 'Kopierat!' : 'Kopiera'}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="gap-1.5 h-8 text-xs"
-                disabled={generating !== null}
-                onClick={() => handleGenerate(generatedContent.type)}
-              >
-                <RefreshCw className="w-3 h-3" />
-                Regenerera
+              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs" disabled={generating !== null} onClick={() => handleGenerate(generatedContent.type)}>
+                <RefreshCw className="w-3 h-3" /> Regenerera
               </Button>
-              {primaryAction && (
-                <Button
-                  size="sm"
-                  className="gap-1.5 h-8 text-xs"
-                  onClick={handlePrimaryAction}
-                >
-                  <primaryAction.icon className="w-3 h-3" />
-                  {primaryAction.label}
-                </Button>
-              )}
+              <Button size="sm" className="gap-1.5 h-8 text-xs" onClick={handleSaveToNotes}>
+                <Save className="w-3 h-3" /> Spara till anteckningar
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -462,10 +573,7 @@ export default function LeadDetail() {
       {previousContent.length > 0 && (
         <Card>
           <CardHeader className="pb-2">
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className="flex items-center justify-between w-full text-left"
-            >
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center justify-between w-full text-left">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <Clock className="w-4 h-4" />
                 Tidigare genererat innehåll ({previousContent.length})
@@ -479,24 +587,17 @@ export default function LeadDetail() {
                 <div key={item.id} className="border rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                      {TYPE_LABELS[item.type as ContentType] || item.type}
+                      {TYPE_LABELS[item.type] || item.type}
                     </span>
                     <span className="text-xs text-muted-foreground">
                       {new Date(item.created_at).toLocaleString('sv-SE')}
                     </span>
                   </div>
-                  <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground line-clamp-4">
-                    {item.content}
-                  </p>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="gap-1.5 h-7 text-xs"
-                    onClick={async () => {
-                      await navigator.clipboard.writeText(item.content);
-                      toast({ title: 'Kopierat', description: 'Texten har kopierats.' });
-                    }}
-                  >
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground line-clamp-4">{item.content}</p>
+                  <Button size="sm" variant="ghost" className="gap-1.5 h-7 text-xs" onClick={async () => {
+                    await navigator.clipboard.writeText(item.content);
+                    toast({ title: 'Kopierat', description: 'Texten har kopierats.' });
+                  }}>
                     <Copy className="w-3 h-3" /> Kopiera
                   </Button>
                 </div>
