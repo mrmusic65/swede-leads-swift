@@ -300,6 +300,15 @@ export default function Leads() {
           </div>
         )}
       </div>
+
+      <LeadSlideOver
+        company={selectedLead}
+        open={!!selectedLead}
+        onClose={() => setSelectedLead(null)}
+        onStatusChange={(id, status) => {
+          setCompanies(prev => prev.map(c => c.id === id ? { ...c, lead_status: status } as Company : c));
+        }}
+      />
     </div>
   );
 }
