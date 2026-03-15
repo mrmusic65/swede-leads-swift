@@ -152,10 +152,19 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10 max-w-4xl animate-fade-in">
+      {/* Display name banner */}
+      {!hasDisplayName && (
+        <Link to="/settings" className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm text-primary hover:bg-primary/10 transition-colors">
+          <Sparkles className="w-4 h-4 shrink-0" />
+          <span>Lägg till ett smeknamn för en bättre upplevelse</span>
+          <ArrowUpRight className="w-3.5 h-3.5 ml-auto shrink-0" />
+        </Link>
+      )}
+
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {firstName ? `Välkommen tillbaka, ${firstName} 👋` : 'Välkommen tillbaka! 👋'}
+          {displayName ? `Välkommen tillbaka, ${displayName} 👋` : 'Välkommen tillbaka! 👋'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1 capitalize">{dateStr}</p>
       </div>
