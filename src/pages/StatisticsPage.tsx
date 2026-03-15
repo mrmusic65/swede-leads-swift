@@ -103,6 +103,21 @@ export default function StatisticsPage() {
 
   const pipelineData = PIPELINE_STAGES.map(s => ({ name: s.label, value: pipelineCounts[s.id] || 0, fill: s.color }));
 
+  const scoreDistribution = useMemo(() => {
+    const buckets = [
+      { range: '0–20', min: 0, max: 20, count: 0 },
+      { range: '20–40', min: 20, max: 40, count: 0 },
+      { range: '40–60', min: 40, max: 60, count: 0 },
+      { range: '60–80', min: 60, max: 80, count: 0 },
+      { range: '80–100', min: 80, max: 101, count: 0 },
+    ];
+    scores.forEach(s => {
+      const bucket = buckets.find(b => s >= b.min && s < b.max);
+      if (bucket) bucket.count++;
+    });
+    return buckets;
+  }, [scores]);
+
   const isEmpty = companies.length === 0;
 
   if (loading) {
@@ -254,6 +269,29 @@ export default function StatisticsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Score distribution histogram */}
+      <div>
+        <SectionTitle>Score-fördelning</SectionTitle>
+        <Card className="border shadow-sm">
+          <CardContent className="p-4 h-72">
+            {isEmpty ? (
+              <EmptyChart text="Data visas när du har leads" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={scoreDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(225, 14%, 91%)" />
+                  <XAxis dataKey="range" tick={{ fontSize: 11, fill: 'hsl(224, 10%, 46%)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(224, 10%, 46%)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <ReTooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(225, 14%, 91%)', fontSize: 12 }} />
+                  <Bar dataKey="count" name="Leads" fill="hsl(172, 66%, 40%)" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
 
       {/* Pipeline stats */}
       <div>

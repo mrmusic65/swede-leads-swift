@@ -471,7 +471,7 @@ export default function Leads() {
                             {formatDate(c.registration_date)}
                           </span>
                         </td>
-                        <td className="px-5 py-4 text-center"><ScoreBadge score={score} /></td>
+                        <td className="px-5 py-4 text-center"><ScoreBadge score={score} showTooltip /></td>
                         <td className="px-5 py-4"><LeadStatusBadge status={(c as any).lead_status ?? 'ny'} /></td>
                         <td className="px-5 py-4">
                           <Tooltip>

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { fetchCompanyById, fetchNotes, addNote, calculateLeadScore, type Company, type Note } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import ScoreBadge from '@/components/ScoreBadge';
+import ScoreGauge from '@/components/ScoreGauge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
 import PhoneStatusBadge from '@/components/PhoneStatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,18 +85,6 @@ export default function LeadDetail() {
     toast({ title: 'Kopierat', description: 'Bolagsinformation kopierad.' });
   };
 
-  const scoreExplanation: string[] = [];
-  if (company.registration_date) {
-    const days = Math.floor((Date.now() - new Date(company.registration_date).getTime()) / (1000 * 60 * 60 * 24));
-    if (days <= 30) scoreExplanation.push('Nyregistrerat (senaste 30 dagarna): +40');
-  }
-  const localIndustries = ['Restaurang & Café', 'Bygg & Renovation', 'Frisör & Skönhet', 'Städ & Facility', 'Hälsa & Träning', 'Bilverkstad & Motor', 'Hemtjänst & Omsorg', 'Trädgård & Markarbete', 'El & VVS', 'Flyttfirma', 'Målare & Tapetserare', 'Tandvård', 'Veterinär'];
-  if (company.industry_label && localIndustries.includes(company.industry_label)) {
-    scoreExplanation.push('Lokal tjänstebransch: +30');
-  }
-  if (company.website_status === 'no_website_found') scoreExplanation.push('Ingen hemsida: +25');
-  else if (company.website_status === 'social_only') scoreExplanation.push('Bara sociala medier: +15');
-  if (company.phone_status === 'has_phone') scoreExplanation.push('Telefonnummer tillgängligt: +10');
 
   const infoItems = [
     { icon: Hash, label: 'Org.nummer', value: company.org_number },
@@ -167,18 +156,7 @@ export default function LeadDetail() {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Lead Score</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-3xl font-bold">{score}</div>
-              <span className="text-xs text-muted-foreground">/ 100</span>
-            </div>
-            <ul className="space-y-1.5">
-              {scoreExplanation.map((s, i) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                  <span className="text-success mt-0.5">✓</span> {s}
-                </li>
-              ))}
-              {scoreExplanation.length === 0 && <li className="text-xs text-muted-foreground">Inga poängfaktorer aktiva.</li>}
-            </ul>
+            <ScoreGauge score={score} company={company} />
           </CardContent>
         </Card>
       </div>
