@@ -39,12 +39,19 @@ export default function Dashboard() {
   const [leadNoteCounts, setLeadNoteCounts] = useState<Record<string, number>>({});
   const [watchlists, setWatchlists] = useState<WatchlistWithCounts[]>([]);
 
-  const [firstName, setFirstName] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [hasDisplayName, setHasDisplayName] = useState(true);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
-      if (data?.full_name) setFirstName(data.full_name.split(' ')[0]);
+    (supabase as any).from('profiles').select('full_name, display_name').eq('id', user.id).single().then(({ data }: any) => {
+      if (data?.display_name) {
+        setDisplayName(data.display_name);
+        setHasDisplayName(true);
+      } else {
+        setHasDisplayName(false);
+        if (data?.full_name) setDisplayName(data.full_name.split(' ')[0]);
+      }
     });
   }, [user]);
 
