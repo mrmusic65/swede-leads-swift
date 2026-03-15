@@ -54,6 +54,7 @@ export const PLANS: PlanConfig[] = [
       'Watchlists & alerts',
       'API-access',
       'Prioriterad support',
+      'Upp till 3 teammedlemmar',
     ],
     highlighted: true,
   },
