@@ -290,7 +290,7 @@ export default function LeadDetail() {
     setTimeout(() => setCopiedContactInfo(false), 2000);
   };
 
-  const [copiedContactInfo, setCopiedContactInfo] = useState(false);
+  // copiedContactInfo state is declared at top
 
   const aiButtons: { type: ContentType; label: string; icon: typeof Megaphone; variant: 'default' | 'outline' }[] = [
     { type: 'call_script', label: 'Kallsamtalsmanus', icon: PhoneCall, variant: 'default' },
