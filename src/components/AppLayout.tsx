@@ -1,8 +1,25 @@
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import MobileNav from './MobileNav';
+import OnboardingModal from './OnboardingModal';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function AppLayout() {
+  const { user } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (supabase as any).from('profiles').select('display_name').eq('id', user.id).single()
+      .then(({ data }: any) => {
+        if (!data?.display_name) setShowOnboarding(true);
+        setChecked(true);
+      });
+  }, [user]);
+
   return (
     <div className="flex min-h-screen bg-background">
       <AppSidebar />
@@ -22,6 +39,12 @@ export default function AppLayout() {
           <Outlet />
         </main>
       </div>
+      {checked && showOnboarding && user && (
+        <OnboardingModal
+          userId={user.id}
+          onComplete={() => setShowOnboarding(false)}
+        />
+      )}
     </div>
   );
 }

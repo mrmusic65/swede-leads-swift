@@ -26,6 +26,7 @@ const ROLE_LABELS: Record<string, { label: string; variant: 'default' | 'seconda
 export default function SettingsPage() {
   const { user } = useAuth();
   const [fullName, setFullName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetSending, setResetSending] = useState(false);
@@ -44,11 +45,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('full_name, notifications_enabled, default_notify_frequency').eq('id', user.id).single()
-      .then(({ data }) => {
+    (supabase as any).from('profiles').select('full_name, display_name, notifications_enabled, default_notify_frequency').eq('id', user.id).single()
+      .then(({ data }: any) => {
         if (data?.full_name) setFullName(data.full_name);
-        if (data) setNotificationsEnabled((data as any).notifications_enabled ?? true);
-        if (data) setDefaultFrequency((data as any).default_notify_frequency ?? 'instant');
+        if (data?.display_name) setDisplayName(data.display_name);
+        if (data) setNotificationsEnabled(data.notifications_enabled ?? true);
+        if (data) setDefaultFrequency(data.default_notify_frequency ?? 'instant');
         setLoading(false);
       });
     loadTeam();
@@ -67,7 +69,7 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({ full_name: fullName }).eq('id', user.id);
+    const { error } = await (supabase as any).from('profiles').update({ full_name: fullName, display_name: displayName || null }).eq('id', user.id);
     toast[error ? 'error' : 'success'](error ? 'Kunde inte spara profil' : 'Profil uppdaterad');
     setSaving(false);
   };
@@ -146,6 +148,11 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm flex items-center gap-1.5"><Mail className="w-3.5 h-3.5 text-muted-foreground" />Email</Label>
             <Input id="email" value={user?.email ?? ''} disabled className="bg-muted/50" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="displayName" className="text-sm flex items-center gap-1.5">Visningsnamn</Label>
+            <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="T.ex. Erik, Säljteamet" maxLength={100} />
+            <p className="text-xs text-muted-foreground">Visas i appen och för dina teammedlemmar</p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm">Fullständigt namn</Label>

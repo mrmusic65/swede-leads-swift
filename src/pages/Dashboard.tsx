@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchWatchlists, fetchWatchlistMatchCounts, type SavedWatchlist } from '@/lib/watchlist-api';
 import { fetchNotesTodayCount, fetchLeadNoteCounts } from '@/lib/lead-notes-api';
-import { Users, TrendingUp, Eye, ArrowRight, MessageSquare, StickyNote } from 'lucide-react';
+import { Users, TrendingUp, Eye, ArrowRight, MessageSquare, StickyNote, ArrowUpRight, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,12 +39,19 @@ export default function Dashboard() {
   const [leadNoteCounts, setLeadNoteCounts] = useState<Record<string, number>>({});
   const [watchlists, setWatchlists] = useState<WatchlistWithCounts[]>([]);
 
-  const [firstName, setFirstName] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [hasDisplayName, setHasDisplayName] = useState(true);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('full_name').eq('id', user.id).single().then(({ data }) => {
-      if (data?.full_name) setFirstName(data.full_name.split(' ')[0]);
+    (supabase as any).from('profiles').select('full_name, display_name').eq('id', user.id).single().then(({ data }: any) => {
+      if (data?.display_name) {
+        setDisplayName(data.display_name);
+        setHasDisplayName(true);
+      } else {
+        setHasDisplayName(false);
+        if (data?.full_name) setDisplayName(data.full_name.split(' ')[0]);
+      }
     });
   }, [user]);
 
@@ -145,10 +152,19 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-10 max-w-4xl animate-fade-in">
+      {/* Display name banner */}
+      {!hasDisplayName && (
+        <Link to="/settings" className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-primary/20 bg-primary/5 text-sm text-primary hover:bg-primary/10 transition-colors">
+          <Sparkles className="w-4 h-4 shrink-0" />
+          <span>Lägg till ett smeknamn för en bättre upplevelse</span>
+          <ArrowUpRight className="w-3.5 h-3.5 ml-auto shrink-0" />
+        </Link>
+      )}
+
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {firstName ? `Välkommen tillbaka, ${firstName} 👋` : 'Välkommen tillbaka! 👋'}
+          {displayName ? `Välkommen tillbaka, ${displayName} 👋` : 'Välkommen tillbaka! 👋'}
         </h1>
         <p className="text-sm text-muted-foreground mt-1 capitalize">{dateStr}</p>
       </div>

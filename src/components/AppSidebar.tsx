@@ -63,12 +63,12 @@ export default function AppSidebar() {
     queryKey: ['sidebar-profile', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('profiles')
-        .select('full_name')
+        .select('full_name, display_name')
         .eq('id', user!.id)
         .single();
-      return data;
+      return data as { full_name: string | null; display_name: string | null } | null;
     },
   });
 
@@ -84,7 +84,7 @@ export default function AppSidebar() {
 
   const avatarColor = useMemo(() => getAvatarColor(user?.email), [user?.email]);
   const initial = user?.email?.charAt(0).toUpperCase() ?? '?';
-  const displayName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const displayName = profile?.display_name || profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   return (
     <aside className="hidden lg:flex flex-col w-60 min-h-screen"
