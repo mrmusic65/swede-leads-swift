@@ -39,6 +39,7 @@ export const PLANS: PlanConfig[] = [
       'Filter på bransch & stad',
       'CSV-export',
       'E-postaviseringar',
+      '1 teammedlem',
     ],
   },
   {
