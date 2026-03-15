@@ -12,6 +12,7 @@ import UseCases from '@/components/landing/UseCases';
 import ConcreteAdvantages from '@/components/landing/ConcreteAdvantages';
 import Faq from '@/components/landing/Faq';
 import ContactForm from '@/components/landing/ContactForm';
+import PrivacyPolicyPage from './PrivacyPolicyPage';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
