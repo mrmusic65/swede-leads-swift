@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown, KanbanSquare, BarChart2, Users2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown, KanbanSquare, BarChart2, Users2, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
