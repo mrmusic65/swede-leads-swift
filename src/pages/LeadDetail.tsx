@@ -156,18 +156,7 @@ export default function LeadDetail() {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">Lead Score</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="text-3xl font-bold">{score}</div>
-              <span className="text-xs text-muted-foreground">/ 100</span>
-            </div>
-            <ul className="space-y-1.5">
-              {scoreExplanation.map((s, i) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-                  <span className="text-success mt-0.5">✓</span> {s}
-                </li>
-              ))}
-              {scoreExplanation.length === 0 && <li className="text-xs text-muted-foreground">Inga poängfaktorer aktiva.</li>}
-            </ul>
+            <ScoreGauge score={score} company={company} />
           </CardContent>
         </Card>
       </div>

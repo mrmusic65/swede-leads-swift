@@ -255,6 +255,29 @@ export default function StatisticsPage() {
         </div>
       </div>
 
+      {/* Score distribution histogram */}
+      <div>
+        <SectionTitle>Score-fördelning</SectionTitle>
+        <Card className="border shadow-sm">
+          <CardContent className="p-4 h-72">
+            {isEmpty ? (
+              <EmptyChart text="Data visas när du har leads" />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={scoreDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(225, 14%, 91%)" />
+                  <XAxis dataKey="range" tick={{ fontSize: 11, fill: 'hsl(224, 10%, 46%)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'hsl(224, 10%, 46%)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <ReTooltip contentStyle={{ borderRadius: 8, border: '1px solid hsl(225, 14%, 91%)', fontSize: 12 }} />
+                  <Bar dataKey="count" name="Leads" fill="hsl(172, 66%, 40%)" radius={[4, 4, 0, 0]} barSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+
       {/* Pipeline stats */}
       <div>
         <SectionTitle>Pipeline-statistik</SectionTitle>
