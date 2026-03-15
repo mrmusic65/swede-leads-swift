@@ -12,17 +12,16 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  ArrowLeft, Mail, MessageSquare, Megaphone, Building2, MapPin, Calendar,
+  ArrowLeft, Megaphone, Building2, MapPin, Calendar,
   Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check, Loader2, RefreshCw,
-  X, ExternalLink, Linkedin, Save, ChevronDown, ChevronUp, Clock
+  X, Save, ChevronDown, ChevronUp, Clock, PhoneCall, ClipboardList, Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type ContentType = 'cold_email' | 'dm' | 'sales_pitch';
+type ContentType = 'call_script' | 'sales_pitch';
 
 const TYPE_LABELS: Record<ContentType, string> = {
-  cold_email: 'Kall e-post',
-  dm: 'LinkedIn DM',
+  call_script: 'Kallsamtalsmanus',
   sales_pitch: 'Säljpitch',
 };
 
@@ -44,6 +43,7 @@ export default function LeadDetail() {
   const [saving, setSaving] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
   const [copiedInfo, setCopiedInfo] = useState(false);
+  const [copiedContactInfo, setCopiedContactInfo] = useState(false);
 
   // AI generation state
   const [generating, setGenerating] = useState<ContentType | null>(null);
@@ -194,13 +194,13 @@ export default function LeadDetail() {
 
     const type = generatedContent.type;
 
-    if (type === 'cold_email') {
-      const subject = encodeURIComponent(`Hej ${company.company_name}`);
-      const body = encodeURIComponent(editableContent);
-      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-    } else if (type === 'dm') {
-      const query = encodeURIComponent(company.company_name);
-      window.open(`https://www.linkedin.com/search/results/companies/?keywords=${query}`, '_blank');
+    if (type === 'call_script') {
+      if (company.phone_number) {
+        window.open(`tel:${company.phone_number}`, '_self');
+      } else {
+        toast({ title: 'Inget telefonnummer', description: 'Det finns inget telefonnummer registrerat för detta bolag.', variant: 'destructive' });
+        return;
+      }
     } else if (type === 'sales_pitch') {
       if (!user) return;
       try {
@@ -220,14 +220,13 @@ export default function LeadDetail() {
   const getPrimaryActionButton = () => {
     if (!generatedContent) return null;
     switch (generatedContent.type) {
-      case 'cold_email':
-        return { label: 'Öppna i e-post', icon: ExternalLink };
-      case 'dm':
-        return { label: 'Sök på LinkedIn', icon: Linkedin };
+      case 'call_script':
+        return { label: 'Ring nu', icon: PhoneCall };
       case 'sales_pitch':
         return { label: 'Spara till anteckningar', icon: Save };
     }
   };
+
 
   const handleAddNote = async () => {
     if (!newNote.trim() || !user) return;
@@ -276,9 +275,25 @@ export default function LeadDetail() {
     { icon: Globe, label: 'Hemsida', value: company.website_url || '—' },
   ];
 
-  const aiButtons: { type: ContentType; label: string; icon: typeof Mail; variant: 'default' | 'outline' }[] = [
-    { type: 'cold_email', label: 'Generera kall e-post', icon: Mail, variant: 'default' },
-    { type: 'dm', label: 'Generera DM', icon: MessageSquare, variant: 'outline' },
+  const handleCopyContactInfo = async () => {
+    if (!company) return;
+    const lines = [
+      `Bolagsnamn: ${company.company_name}`,
+      `Org.nummer: ${company.org_number || '—'}`,
+      `Telefon: ${company.phone_number || '—'}`,
+      `Adress: ${[company.address, company.postal_code, company.city].filter(Boolean).join(', ') || '—'}`,
+      `Bransch: ${company.industry_label || '—'}`,
+      `Stad: ${company.city || '—'}`,
+    ].join('\n');
+    await navigator.clipboard.writeText(lines);
+    setCopiedContactInfo(true);
+    setTimeout(() => setCopiedContactInfo(false), 2000);
+  };
+
+  // copiedContactInfo state is declared at top
+
+  const aiButtons: { type: ContentType; label: string; icon: typeof Megaphone; variant: 'default' | 'outline' }[] = [
+    { type: 'call_script', label: 'Kallsamtalsmanus', icon: PhoneCall, variant: 'default' },
     { type: 'sales_pitch', label: 'Generera säljpitch', icon: Megaphone, variant: 'outline' },
   ];
 
@@ -348,25 +363,40 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      {/* AI Generation Buttons */}
-      <div className="flex flex-wrap gap-2">
-        {aiButtons.map(btn => (
+      {/* AI Generation & Action Buttons */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {aiButtons.map(btn => (
+            <Button
+              key={btn.type}
+              size="sm"
+              variant={generatedContent?.type === btn.type ? 'default' : btn.variant}
+              className="gap-1.5"
+              disabled={generating !== null}
+              onClick={() => handleGenerate(btn.type)}
+            >
+              {generating === btn.type ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <btn.icon className="w-3.5 h-3.5" />
+              )}
+              {generating === btn.type ? 'Genererar...' : btn.label}
+            </Button>
+          ))}
           <Button
-            key={btn.type}
             size="sm"
-            variant={generatedContent?.type === btn.type ? 'default' : btn.variant}
-            className="gap-1.5"
-            disabled={generating !== null}
-            onClick={() => handleGenerate(btn.type)}
+            variant="outline"
+            className={`gap-1.5 transition-colors ${copiedContactInfo ? 'border-emerald-500 text-emerald-600' : ''}`}
+            onClick={handleCopyContactInfo}
           >
-            {generating === btn.type ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <btn.icon className="w-3.5 h-3.5" />
-            )}
-            {generating === btn.type ? 'Genererar...' : btn.label}
+            {copiedContactInfo ? <Check className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
+            {copiedContactInfo ? 'Kopierat!' : 'Kopiera kontaktinfo'}
           </Button>
-        ))}
+        </div>
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Info className="w-3 h-3 shrink-0" />
+          E-postadresser till beslutsfattare kommer inom kort via vår Creditsafe-integration.
+        </p>
       </div>
 
       {/* Generated Content Display */}
