@@ -364,8 +364,6 @@ export default function LeadDetail() {
           <p className="text-sm text-muted-foreground mt-1">{company.city} · {company.industry_label}</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <WebsiteStatusBadge status={company.website_status} />
-          <PhoneStatusBadge status={company.phone_status} />
           <ScoreBadge score={score} />
           <Button size="sm" variant="outline" className="gap-1.5 h-7 text-xs" onClick={handleCopyInfo}>
             {copiedInfo ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
