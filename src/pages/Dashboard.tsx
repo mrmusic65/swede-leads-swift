@@ -131,6 +131,15 @@ export default function Dashboard() {
       iconColor: 'text-info',
       trend: null,
     },
+    {
+      label: 'Anteckningar idag',
+      value: notesToday,
+      icon: StickyNote,
+      borderClass: 'kpi-border-warning',
+      iconBg: 'bg-warning/10',
+      iconColor: 'text-warning',
+      trend: null,
+    },
   ];
 
   return (
