@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchCompanyById, fetchNotes, addNote, calculateLeadScore, type Company, type Note } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Mail, MessageSquare, Megaphone, Building2, MapPin, Calendar, Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check, Loader2, RefreshCw, X } from 'lucide-react';
+import {
+  ArrowLeft, Mail, MessageSquare, Megaphone, Building2, MapPin, Calendar,
+  Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check, Loader2, RefreshCw,
+  X, ExternalLink, Linkedin, Save, ChevronDown, ChevronUp, Clock
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type ContentType = 'cold_email' | 'dm' | 'sales_pitch';
@@ -21,6 +25,13 @@ const TYPE_LABELS: Record<ContentType, string> = {
   dm: 'LinkedIn DM',
   sales_pitch: 'Säljpitch',
 };
+
+interface SavedContent {
+  id: string;
+  type: string;
+  content: string;
+  created_at: string;
+}
 
 export default function LeadDetail() {
   const { id } = useParams();
@@ -37,7 +48,21 @@ export default function LeadDetail() {
   // AI generation state
   const [generating, setGenerating] = useState<ContentType | null>(null);
   const [generatedContent, setGeneratedContent] = useState<{ type: ContentType; content: string } | null>(null);
+  const [editableContent, setEditableContent] = useState('');
   const [copiedContent, setCopiedContent] = useState(false);
+
+  // Previous content history
+  const [previousContent, setPreviousContent] = useState<SavedContent[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+
+  const loadPreviousContent = useCallback(async (leadId: string) => {
+    const { data } = await (supabase as any)
+      .from('lead_content')
+      .select('id, type, content, created_at')
+      .eq('lead_id', leadId)
+      .order('created_at', { ascending: false });
+    if (data) setPreviousContent(data);
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -45,7 +70,15 @@ export default function LeadDetail() {
       .then(([c, n]) => { setCompany(c); setNotes(n); })
       .catch(() => toast({ title: 'Fel', description: 'Kunde inte ladda bolag.', variant: 'destructive' }))
       .finally(() => setLoading(false));
+    loadPreviousContent(id);
   }, [id]);
+
+  // Sync editable content when generated content changes
+  useEffect(() => {
+    if (generatedContent) {
+      setEditableContent(generatedContent.content);
+    }
+  }, [generatedContent]);
 
   if (loading) {
     return <div className="space-y-4 max-w-4xl"><Skeleton className="h-8 w-48" /><Skeleton className="h-64 w-full" /></div>;
@@ -95,6 +128,9 @@ export default function LeadDetail() {
         type,
         content,
       });
+
+      // Refresh history
+      loadPreviousContent(company.id);
     } catch (e: any) {
       toast({ title: 'Fel', description: e.message || 'Kunde inte generera innehåll.', variant: 'destructive' });
     } finally {
@@ -103,11 +139,94 @@ export default function LeadDetail() {
   };
 
   const handleCopyContent = async () => {
-    if (!generatedContent) return;
-    await navigator.clipboard.writeText(generatedContent.content);
+    if (!editableContent) return;
+    await navigator.clipboard.writeText(editableContent);
     setCopiedContent(true);
     setTimeout(() => setCopiedContent(false), 2000);
-    toast({ title: 'Kopierat', description: 'Texten har kopierats.' });
+  };
+
+  const showMoveToContactedToast = () => {
+    if (!company || company.pipeline_stage !== 'new') return;
+
+    toast({
+      title: `Vill du flytta ${company.company_name} till Kontaktad?`,
+      description: '',
+      duration: 10000,
+      action: (
+        <div className="flex gap-2 mt-1">
+          <Button
+            size="sm"
+            variant="default"
+            className="h-7 text-xs"
+            onClick={async () => {
+              await (supabase as any)
+                .from('companies')
+                .update({ pipeline_stage: 'contacted' })
+                .eq('id', company.id);
+
+              // Log activity
+              if (user) {
+                await (supabase as any).from('lead_activity').insert({
+                  lead_id: company.id,
+                  user_id: user.id,
+                  action: 'status_changed',
+                  old_value: 'Ny',
+                  new_value: 'Kontaktad',
+                });
+              }
+
+              setCompany({ ...company, pipeline_stage: 'contacted' });
+              toast({ title: 'Uppdaterat', description: `${company.company_name} flyttad till Kontaktad.` });
+            }}
+          >
+            Ja, flytta
+          </Button>
+          <Button size="sm" variant="outline" className="h-7 text-xs">
+            Behåll som Ny
+          </Button>
+        </div>
+      ),
+    });
+  };
+
+  const handlePrimaryAction = async () => {
+    if (!generatedContent || !company) return;
+
+    const type = generatedContent.type;
+
+    if (type === 'cold_email') {
+      const subject = encodeURIComponent(`Hej ${company.company_name}`);
+      const body = encodeURIComponent(editableContent);
+      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
+    } else if (type === 'dm') {
+      const query = encodeURIComponent(company.company_name);
+      window.open(`https://www.linkedin.com/search/results/companies/?keywords=${query}`, '_blank');
+    } else if (type === 'sales_pitch') {
+      if (!user) return;
+      try {
+        const noteText = `Säljpitch: ${editableContent}`;
+        const note = await addNote(company.id, user.id, noteText);
+        setNotes(prev => [...prev, note]);
+        toast({ title: 'Sparat', description: 'Säljpitchen har sparats som anteckning.' });
+      } catch {
+        toast({ title: 'Fel', description: 'Kunde inte spara anteckning.', variant: 'destructive' });
+        return;
+      }
+    }
+
+    showMoveToContactedToast();
+  };
+
+  const getPrimaryActionButton = () => {
+    if (!generatedContent) return null;
+    switch (generatedContent.type) {
+      case 'cold_email':
+        return { label: 'Öppna i e-post', icon: ExternalLink };
+      case 'dm':
+        return { label: 'Sök på LinkedIn', icon: Linkedin };
+      case 'sales_pitch':
+        return { label: 'Spara till anteckningar', icon: Save };
+    }
   };
 
   const handleAddNote = async () => {
@@ -162,6 +281,8 @@ export default function LeadDetail() {
     { type: 'dm', label: 'Generera DM', icon: MessageSquare, variant: 'outline' },
     { type: 'sales_pitch', label: 'Generera säljpitch', icon: Megaphone, variant: 'outline' },
   ];
+
+  const primaryAction = getPrimaryActionButton();
 
   return (
     <div className="space-y-6 max-w-4xl animate-fade-in">
@@ -233,7 +354,7 @@ export default function LeadDetail() {
           <Button
             key={btn.type}
             size="sm"
-            variant={btn.variant}
+            variant={generatedContent?.type === btn.type ? 'default' : btn.variant}
             className="gap-1.5"
             disabled={generating !== null}
             onClick={() => handleGenerate(btn.type)}
@@ -267,12 +388,19 @@ export default function LeadDetail() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="text-sm whitespace-pre-wrap leading-relaxed rounded-lg bg-background p-4 border border-border">
-              {generatedContent.content}
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" variant="outline" className="gap-1.5 h-8 text-xs" onClick={handleCopyContent}>
-                {copiedContent ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            <Textarea
+              value={editableContent}
+              onChange={e => setEditableContent(e.target.value)}
+              className="min-h-[160px] text-sm leading-relaxed bg-background border-border resize-y"
+            />
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className={`gap-1.5 h-8 text-xs transition-colors ${copiedContent ? 'border-emerald-500 text-emerald-600' : ''}`}
+                onClick={handleCopyContent}
+              >
+                {copiedContent ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                 {copiedContent ? 'Kopierat!' : 'Kopiera'}
               </Button>
               <Button
@@ -285,8 +413,66 @@ export default function LeadDetail() {
                 <RefreshCw className="w-3 h-3" />
                 Regenerera
               </Button>
+              {primaryAction && (
+                <Button
+                  size="sm"
+                  className="gap-1.5 h-8 text-xs"
+                  onClick={handlePrimaryAction}
+                >
+                  <primaryAction.icon className="w-3 h-3" />
+                  {primaryAction.label}
+                </Button>
+              )}
             </div>
           </CardContent>
+        </Card>
+      )}
+
+      {/* Previous Generated Content */}
+      {previousContent.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Clock className="w-4 h-4" />
+                Tidigare genererat innehåll ({previousContent.length})
+              </CardTitle>
+              {showHistory ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+            </button>
+          </CardHeader>
+          {showHistory && (
+            <CardContent className="space-y-3 pt-0">
+              {previousContent.map(item => (
+                <div key={item.id} className="border rounded-lg p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                      {TYPE_LABELS[item.type as ContentType] || item.type}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(item.created_at).toLocaleString('sv-SE')}
+                    </span>
+                  </div>
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed text-muted-foreground line-clamp-4">
+                    {item.content}
+                  </p>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="gap-1.5 h-7 text-xs"
+                    onClick={async () => {
+                      await navigator.clipboard.writeText(item.content);
+                      toast({ title: 'Kopierat', description: 'Texten har kopierats.' });
+                    }}
+                  >
+                    <Copy className="w-3 h-3" /> Kopiera
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          )}
         </Card>
       )}
 
