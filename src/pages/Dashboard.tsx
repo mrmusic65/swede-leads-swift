@@ -190,6 +190,7 @@ export default function Dashboard() {
             {latestLeads.length === 0 ? (
               <p className="text-sm text-muted-foreground py-10 text-center">Inga leads ännu.</p>
             ) : (
+              <TooltipProvider>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
