@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { fetchCompanyById, fetchNotes, addNote, calculateLeadScore, type Company, type Note } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import ScoreBadge from '@/components/ScoreBadge';
+import ScoreGauge from '@/components/ScoreGauge';
 import WebsiteStatusBadge from '@/components/WebsiteStatusBadge';
 import PhoneStatusBadge from '@/components/PhoneStatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
