@@ -1,9 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown, KanbanSquare, BarChart2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchUserTeam } from '@/lib/team-api';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,8 +30,7 @@ const AVATAR_COLORS = [
 
 function getAvatarColor(email: string | undefined) {
   if (!email) return AVATAR_COLORS[0];
-  const code = email.charCodeAt(0);
-  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+  return AVATAR_COLORS[email.charCodeAt(0) % AVATAR_COLORS.length];
 }
 
 const TIER_LABELS: Record<string, string> = {
@@ -72,6 +72,12 @@ export default function AppSidebar() {
     },
   });
 
+  const { data: team } = useQuery({
+    queryKey: ['sidebar-team', user?.id],
+    enabled: !!user,
+    queryFn: fetchUserTeam,
+  });
+
   const planLabel = subscription
     ? `${TIER_LABELS[subscription.plan_tier] ?? subscription.plan_tier} plan`
     : 'Gratis';
@@ -93,6 +99,16 @@ export default function AppSidebar() {
         </div>
         <span className="text-base font-bold text-sidebar-accent-foreground tracking-tight">LeadRadar</span>
       </div>
+
+      {/* Team badge */}
+      {team && (
+        <div className="px-5 pb-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-sidebar-accent/50 border border-sidebar-border">
+            <Users className="w-3 h-3 text-sidebar-primary shrink-0" />
+            <span className="text-[11px] font-medium text-sidebar-accent-foreground truncate">{team.name}</span>
+          </div>
+        </div>
+      )}
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-2 space-y-0.5">
