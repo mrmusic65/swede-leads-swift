@@ -59,9 +59,6 @@ function isNewLead(dateStr: string | null): boolean {
   return Date.now() - new Date(dateStr).getTime() < 7 * 24 * 60 * 60 * 1000;
 }
 
-function getInitials(userId: string): string {
-  return userId.slice(0, 2).toUpperCase();
-}
 
 const MAX_CHARS = 2000;
 
