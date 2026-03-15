@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
     // Fetch all watchlists with notifications enabled
     const { data: watchlists, error: wlError } = await supabase
       .from("saved_watchlists")
-      .select("*, profiles!inner(email, notifications_enabled)")
+      .select("*")
       .eq("notify_enabled", true);
 
     if (wlError) throw wlError;
@@ -134,7 +134,13 @@ Deno.serve(async (req) => {
     let totalSent = 0;
 
     for (const wl of watchlists) {
-      const profile = (wl as any).profiles;
+      // Fetch user profile separately
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email, notifications_enabled")
+        .eq("id", wl.user_id)
+        .single();
+
       // Skip if user has globally disabled notifications
       if (profile && !profile.notifications_enabled) continue;
 
