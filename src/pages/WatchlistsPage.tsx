@@ -64,6 +64,9 @@ export default function WatchlistsPage() {
 
   const [name, setName] = useState('');
   const [filters, setFilters] = useState<WatchlistFilters>({});
+  const [notifyEnabled, setNotifyEnabled] = useState(true);
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [notifyFrequency, setNotifyFrequency] = useState('instant');
 
   const [cities, setCities] = useState<string[]>([]);
   const [industries, setIndustries] = useState<string[]>([]);
