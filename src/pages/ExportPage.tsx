@@ -197,8 +197,8 @@ export default function ExportPage() {
             <div className="p-2.5 rounded-lg bg-primary/10">
               <Database className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{totalLeads.toLocaleString('sv-SE')}</p>
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-foreground truncate">{totalLeads.toLocaleString('sv-SE')}</p>
               <p className="text-sm text-muted-foreground">Totalt antal leads</p>
             </div>
           </CardContent>
@@ -209,8 +209,8 @@ export default function ExportPage() {
             <div className="p-2.5 rounded-lg bg-primary/10">
               <Clock className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{formatExportDate(lastExported)}</p>
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-foreground truncate">{formatExportDate(lastExported)}</p>
               <p className="text-sm text-muted-foreground">Senast exporterat</p>
             </div>
           </CardContent>
@@ -221,14 +221,13 @@ export default function ExportPage() {
             <div className="p-2.5 rounded-lg bg-primary/10">
               <CreditCard className="w-5 h-5 text-primary" />
             </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{planName}</p>
-              {isTrialing && (
-                <span className="inline-block mt-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                  Testperiod
-                </span>
+            <div className="min-w-0">
+              <p className="text-lg font-semibold text-foreground truncate">{planName}</p>
+              {isTrialing ? (
+                <span className="inline-block mt-0.5 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">Testperiod</span>
+              ) : (
+                <p className="text-sm text-muted-foreground">Din plan</p>
               )}
-              <p className="text-sm text-muted-foreground">Din plan</p>
             </div>
           </CardContent>
         </Card>
