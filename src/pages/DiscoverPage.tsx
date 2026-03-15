@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchWatchlists, fetchWatchlistMatches, type SavedWatchlist } from '@/lib/watchlist-api';
+import { calculateLeadScore, type Company } from '@/lib/api';
 import { Sparkles, Search, Plus, ArrowRight, Building2, Truck, Cpu, Hammer, ShoppingBag, Utensils, Heart, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -17,22 +18,6 @@ function getGreeting() {
   return 'God kväll';
 }
 
-function computeScore(c: any): number {
-  let s = 0;
-  if (c.registration_date) {
-    const days = (Date.now() - new Date(c.registration_date).getTime()) / 86400000;
-    if (days <= 30) s += 40;
-    else if (days <= 90) s += 20;
-  }
-  if (c.phone_status === 'has_phone') s += 15;
-  if (c.website_status === 'has_website') s += 20;
-  else if (c.website_status === 'social_only') s += 10;
-  if (c.company_form === 'Aktiebolag') s += 10;
-  if (c.industry_label) s += 5;
-  if (c.f_tax_registered) s += 5;
-  if (c.vat_registered) s += 5;
-  return Math.min(s, 100);
-}
 
 /* ── industry config ── */
 const INDUSTRIES = [
@@ -136,7 +121,7 @@ export default function DiscoverPage() {
 
       const companies = hotRes.data ?? [];
       // Sort by score, take top 3
-      const scored = companies.map((c: any) => ({ ...c, _score: computeScore(c) }));
+      const scored = companies.map((c: any) => ({ ...c, _score: calculateLeadScore(c as Company) }));
       scored.sort((a: any, b: any) => b._score - a._score);
       setHotLeads(scored.slice(0, 3));
 
