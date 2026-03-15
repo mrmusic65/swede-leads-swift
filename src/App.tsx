@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
+import DiscoverPage from "./pages/DiscoverPage";
 import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
 import ImportPage from "./pages/ImportPage";
