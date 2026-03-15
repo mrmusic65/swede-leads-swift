@@ -12,6 +12,7 @@ import ImportPage from "./pages/ImportPage";
 import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
+import PipelinePage from "./pages/PipelinePage";
 import WatchlistsPage from "./pages/WatchlistsPage";
 import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
