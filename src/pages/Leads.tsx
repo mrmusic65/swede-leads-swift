@@ -3,11 +3,25 @@ import { Link } from 'react-router-dom';
 import { fetchCompanies, fetchDistinctCities, fetchDistinctIndustries, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
 import LeadStatusBadge from '@/components/LeadStatusBadge';
+import IndustryBadge from '@/components/IndustryBadge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Download, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function isNewLead(dateStr: string | null): boolean {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return now.getTime() - d.getTime() < 7 * 24 * 60 * 60 * 1000;
+}
 
 const PAGE_SIZE = 30;
 
