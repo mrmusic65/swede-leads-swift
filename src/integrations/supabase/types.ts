@@ -246,6 +246,82 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_activity: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          lead_id: string
+          new_value: string | null
+          old_value: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          new_value?: string | null
+          old_value?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_activity_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_notes: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          lead_id: string
+          note_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          lead_id: string
+          note_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          lead_id?: string
+          note_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_notes_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           company_id: string

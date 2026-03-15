@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchWatchlists, fetchWatchlistMatchCounts, type SavedWatchlist } from '@/lib/watchlist-api';
-import { Users, TrendingUp, Eye, ArrowRight } from 'lucide-react';
+import { fetchNotesTodayCount, fetchLeadNoteCounts } from '@/lib/lead-notes-api';
+import { Users, TrendingUp, Eye, ArrowRight, MessageSquare, StickyNote } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import IndustryBadge from '@/components/IndustryBadge';
 
 interface WatchlistWithCounts extends SavedWatchlist {
@@ -32,7 +34,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [leadsToday, setLeadsToday] = useState(0);
   const [leadsWeek, setLeadsWeek] = useState(0);
+  const [notesToday, setNotesToday] = useState(0);
   const [latestLeads, setLatestLeads] = useState<any[]>([]);
+  const [leadNoteCounts, setLeadNoteCounts] = useState<Record<string, number>>({});
   const [watchlists, setWatchlists] = useState<WatchlistWithCounts[]>([]);
 
   const [firstName, setFirstName] = useState<string | null>(null);
@@ -60,10 +64,19 @@ export default function Dashboard() {
       supabase.from('companies').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('companies').select('id, company_name, industry_label, city, registration_date').order('created_at', { ascending: false }).limit(5),
       fetchWatchlists(user.id),
-    ]).then(async ([todayRes, weekRes, latestRes, wls]) => {
+      fetchNotesTodayCount(),
+    ]).then(async ([todayRes, weekRes, latestRes, wls, notesCount]) => {
       setLeadsToday(todayRes.count ?? 0);
       setLeadsWeek(weekRes.count ?? 0);
-      setLatestLeads(latestRes.data ?? []);
+      setNotesToday(notesCount);
+      const leads = latestRes.data ?? [];
+      setLatestLeads(leads);
+
+      // Fetch note counts for latest leads
+      const leadIds = leads.map((l: any) => l.id);
+      if (leadIds.length > 0) {
+        fetchLeadNoteCounts(leadIds).then(setLeadNoteCounts).catch(() => {});
+      }
 
       const withCounts = await Promise.all(
         wls.slice(0, 5).map(async (w) => {
@@ -83,8 +96,8 @@ export default function Dashboard() {
     return (
       <div className="space-y-8 max-w-4xl">
         <Skeleton className="h-10 w-72" />
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
         </div>
         <Skeleton className="h-64 rounded-xl" />
       </div>
@@ -119,6 +132,15 @@ export default function Dashboard() {
       iconColor: 'text-info',
       trend: null,
     },
+    {
+      label: 'Anteckningar idag',
+      value: notesToday,
+      icon: StickyNote,
+      borderClass: 'kpi-border-warning',
+      iconBg: 'bg-warning/10',
+      iconColor: 'text-warning',
+      trend: null,
+    },
   ];
 
   return (
@@ -132,7 +154,7 @@ export default function Dashboard() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {kpis.map(kpi => (
           <Card key={kpi.label} className={kpi.borderClass}>
             <CardContent className="pt-6 pb-5 px-6">
@@ -168,6 +190,7 @@ export default function Dashboard() {
             {latestLeads.length === 0 ? (
               <p className="text-sm text-muted-foreground py-10 text-center">Inga leads ännu.</p>
             ) : (
+              <TooltipProvider>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -186,6 +209,17 @@ export default function Dashboard() {
                             <Link to={`/leads/${lead.id}`} className="font-medium text-foreground hover:text-primary transition-colors duration-150">
                               {lead.company_name}
                             </Link>
+                            {leadNoteCounts[lead.id] > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                    <MessageSquare className="w-3 h-3" />
+                                    <span className="text-[10px]">{leadNoteCounts[lead.id]}</span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">{leadNoteCounts[lead.id]} anteckning{leadNoteCounts[lead.id] > 1 ? 'ar' : ''}</TooltipContent>
+                              </Tooltip>
+                            )}
                             {isNewLead(lead.registration_date) && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
@@ -204,6 +238,7 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               </div>
+              </TooltipProvider>
             )}
           </CardContent>
         </Card>
