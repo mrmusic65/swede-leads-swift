@@ -13,6 +13,7 @@ import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
 import PipelinePage from "./pages/PipelinePage";
+import StatisticsPage from "./pages/StatisticsPage";
 import WatchlistsPage from "./pages/WatchlistsPage";
 import WatchlistDetailPage from "./pages/WatchlistDetailPage";
 import SubscriptionPage from "./pages/SubscriptionPage";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/pipeline" element={<PipelinePage />} />
               <Route path="/import" element={<ImportPage />} />
+              <Route path="/statistics" element={<StatisticsPage />} />
               <Route path="/export" element={<ExportPage />} />
               <Route path="/watchlists" element={<WatchlistsPage />} />
               <Route path="/watchlists/:id" element={<WatchlistDetailPage />} />
