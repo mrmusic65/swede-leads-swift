@@ -278,26 +278,77 @@ export type Database = {
           },
         ]
       }
+      notification_log: {
+        Row: {
+          email_subject: string | null
+          id: string
+          lead_id: string
+          sent_at: string
+          status: string
+          user_id: string
+          watchlist_id: string
+        }
+        Insert: {
+          email_subject?: string | null
+          id?: string
+          lead_id: string
+          sent_at?: string
+          status?: string
+          user_id: string
+          watchlist_id: string
+        }
+        Update: {
+          email_subject?: string | null
+          id?: string
+          lead_id?: string
+          sent_at?: string
+          status?: string
+          user_id?: string
+          watchlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_log_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_log_watchlist_id_fkey"
+            columns: ["watchlist_id"]
+            isOneToOne: false
+            referencedRelation: "saved_watchlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
+          default_notify_frequency: string
           email: string | null
           full_name: string | null
           id: string
+          notifications_enabled: boolean
           stripe_customer_id: string | null
         }
         Insert: {
           created_at?: string
+          default_notify_frequency?: string
           email?: string | null
           full_name?: string | null
           id: string
+          notifications_enabled?: boolean
           stripe_customer_id?: string | null
         }
         Update: {
           created_at?: string
+          default_notify_frequency?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          notifications_enabled?: boolean
           stripe_customer_id?: string | null
         }
         Relationships: []
@@ -332,6 +383,9 @@ export type Database = {
           filters_json: Json
           id: string
           name: string
+          notification_email: string | null
+          notify_enabled: boolean
+          notify_frequency: string
           user_id: string
         }
         Insert: {
@@ -339,6 +393,9 @@ export type Database = {
           filters_json?: Json
           id?: string
           name: string
+          notification_email?: string | null
+          notify_enabled?: boolean
+          notify_frequency?: string
           user_id: string
         }
         Update: {
@@ -346,6 +403,9 @@ export type Database = {
           filters_json?: Json
           id?: string
           name?: string
+          notification_email?: string | null
+          notify_enabled?: boolean
+          notify_frequency?: string
           user_id?: string
         }
         Relationships: []
