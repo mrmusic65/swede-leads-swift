@@ -26,6 +26,7 @@ const ROLE_LABELS: Record<string, { label: string; variant: 'default' | 'seconda
 export default function SettingsPage() {
   const { user } = useAuth();
   const [fullName, setFullName] = useState('');
+  const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resetSending, setResetSending] = useState(false);
