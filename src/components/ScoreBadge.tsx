@@ -1,14 +1,17 @@
 import { cn } from '@/lib/utils';
-import type { Enums } from '@/integrations/supabase/types';
 
 export default function ScoreBadge({ score }: { score: number }) {
+  const color =
+    score >= 80 ? 'bg-emerald-500 text-white' :
+    score >= 60 ? 'bg-amber-400 text-white' :
+    score >= 40 ? 'bg-orange-400 text-white' :
+    'bg-muted text-muted-foreground';
+
   return (
     <span
       className={cn(
-        'inline-flex items-center justify-center w-9 h-6 rounded-full text-xs font-semibold',
-        score >= 70 ? 'bg-success/15 text-success' :
-        score >= 40 ? 'bg-warning/15 text-warning' :
-        'bg-muted text-muted-foreground'
+        'inline-flex items-center justify-center min-w-[2.25rem] h-6 rounded-full text-[11px] font-bold px-2',
+        color
       )}
     >
       {score}

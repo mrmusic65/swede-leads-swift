@@ -12,8 +12,12 @@ const INDUSTRY_COLORS: Record<string, string> = {
   'Tillverkning': 'bg-amber-50 text-amber-700 border-amber-200/60',
   'Verksamhet inom juridik, ekonomi, vetenskap och teknik': 'bg-cyan-50 text-cyan-700 border-cyan-200/60',
   'Fastighetsverksamhet': 'bg-rose-50 text-rose-700 border-rose-200/60',
-  'Hotell- och restaurangverksamhet': 'bg-pink-50 text-pink-700 border-pink-200/60',
+  'Hotell- och restaurangverksamhet': 'bg-red-50 text-red-600 border-red-200/60',
   'Uthyrning, fastighetsservice, resetjänster och andra stödtjänster': 'bg-teal-50 text-teal-700 border-teal-200/60',
+  'Jordbruk, skogsbruk och fiske': 'bg-lime-50 text-lime-700 border-lime-200/60',
+  'Utbildning': 'bg-indigo-50 text-indigo-700 border-indigo-200/60',
+  'Vård och omsorg; sociala tjänster': 'bg-pink-50 text-pink-600 border-pink-200/60',
+  'Kultur, nöje och fritid': 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/60',
 };
 
 const DEFAULT_COLOR = 'bg-muted text-muted-foreground border-border/60';
@@ -26,7 +30,7 @@ export default function IndustryBadge({ industry }: { industry: string | null })
   )?.[1] ?? DEFAULT_COLOR;
 
   return (
-    <Badge variant="outline" className={`${colorClass} text-[11px] font-medium px-2 py-0.5 border whitespace-nowrap`}>
+    <Badge variant="outline" className={`${colorClass} text-[11px] font-medium px-2.5 py-0.5 rounded-full border whitespace-nowrap`}>
       {industry.length > 25 ? industry.slice(0, 22) + '…' : industry}
     </Badge>
   );
