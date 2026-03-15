@@ -18,11 +18,10 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
-type ContentType = 'cold_email' | 'dm' | 'sales_pitch';
+type ContentType = 'call_script' | 'sales_pitch';
 
 const TYPE_LABELS: Record<ContentType, string> = {
-  cold_email: 'Kall e-post',
-  dm: 'LinkedIn DM',
+  call_script: 'Kallsamtalsmanus',
   sales_pitch: 'Säljpitch',
 };
 
