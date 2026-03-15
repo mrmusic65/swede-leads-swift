@@ -210,8 +210,7 @@ export default function ExportPage() {
               <Clock className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground">{formatExportDate(lastExported)}</p>
-              <p className="text-sm text-muted-foreground">Senast exporterat</p>
+              <p className="text-2xl font-bold text-foreground truncate">{formatExportDate(lastExported)}</p>
             </div>
           </CardContent>
         </Card>
