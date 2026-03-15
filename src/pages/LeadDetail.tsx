@@ -193,13 +193,13 @@ export default function LeadDetail() {
 
     const type = generatedContent.type;
 
-    if (type === 'cold_email') {
-      const subject = encodeURIComponent(`Hej ${company.company_name}`);
-      const body = encodeURIComponent(editableContent);
-      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank');
-    } else if (type === 'dm') {
-      const query = encodeURIComponent(company.company_name);
-      window.open(`https://www.linkedin.com/search/results/companies/?keywords=${query}`, '_blank');
+    if (type === 'call_script') {
+      if (company.phone_number) {
+        window.open(`tel:${company.phone_number}`, '_self');
+      } else {
+        toast({ title: 'Inget telefonnummer', description: 'Det finns inget telefonnummer registrerat för detta bolag.', variant: 'destructive' });
+        return;
+      }
     } else if (type === 'sales_pitch') {
       if (!user) return;
       try {
@@ -219,14 +219,13 @@ export default function LeadDetail() {
   const getPrimaryActionButton = () => {
     if (!generatedContent) return null;
     switch (generatedContent.type) {
-      case 'cold_email':
-        return { label: 'Öppna i e-post', icon: ExternalLink };
-      case 'dm':
-        return { label: 'Sök på LinkedIn', icon: Linkedin };
+      case 'call_script':
+        return { label: 'Ring nu', icon: PhoneCall };
       case 'sales_pitch':
         return { label: 'Spara till anteckningar', icon: Save };
     }
   };
+
 
   const handleAddNote = async () => {
     if (!newNote.trim() || !user) return;
