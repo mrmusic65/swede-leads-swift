@@ -63,8 +63,8 @@ export default function AuthPage() {
       {/* Sticky navbar */}
       <header className="sticky top-0 z-50 flex items-center justify-between px-6 lg:px-12 py-4 border-b" style={{ background: '#F5F0E8', borderColor: '#e5e2db' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#2d9f8f' }}>
-            <Zap className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: '#2d9f8f' }} role="img" aria-label="LeadRadar logotyp">
+            <Zap className="w-4 h-4 text-white" aria-hidden="true" />
           </div>
           <span className="text-lg font-semibold tracking-tight" style={{ color: '#2c2a25' }}>LeadRadar</span>
         </div>
