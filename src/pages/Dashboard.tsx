@@ -64,10 +64,18 @@ export default function Dashboard() {
       supabase.from('companies').select('id, company_name, industry_label, city, registration_date').order('created_at', { ascending: false }).limit(5),
       fetchWatchlists(user.id),
       fetchNotesTodayCount(),
-    ]).then(async ([todayRes, weekRes, latestRes, wls]) => {
+    ]).then(async ([todayRes, weekRes, latestRes, wls, notesCount]) => {
       setLeadsToday(todayRes.count ?? 0);
       setLeadsWeek(weekRes.count ?? 0);
-      setLatestLeads(latestRes.data ?? []);
+      setNotesToday(notesCount);
+      const leads = latestRes.data ?? [];
+      setLatestLeads(leads);
+
+      // Fetch note counts for latest leads
+      const leadIds = leads.map((l: any) => l.id);
+      if (leadIds.length > 0) {
+        fetchLeadNoteCounts(leadIds).then(setLeadNoteCounts).catch(() => {});
+      }
 
       const withCounts = await Promise.all(
         wls.slice(0, 5).map(async (w) => {
