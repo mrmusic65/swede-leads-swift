@@ -121,7 +121,7 @@ export default function DiscoverPage() {
 
       const companies = hotRes.data ?? [];
       // Sort by score, take top 3
-      const scored = companies.map((c: any) => ({ ...c, _score: computeScore(c) }));
+      const scored = companies.map((c: any) => ({ ...c, _score: calculateLeadScore(c as Company) }));
       scored.sort((a: any, b: any) => b._score - a._score);
       setHotLeads(scored.slice(0, 3));
 
