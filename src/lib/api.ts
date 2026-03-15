@@ -12,6 +12,12 @@ const LOCAL_INDUSTRIES = [
   'Flyttfirma', 'Målare & Tapetserare', 'Tandvård', 'Veterinär',
 ];
 
+function hasValidWebsite(c: Company): boolean {
+  const url = c.website_url;
+  if (!url || url.trim() === '' || url === '—') return false;
+  try { new URL(url); return true; } catch { return false; }
+}
+
 export function calculateLeadScore(c: Company): number {
   let score = 0;
   if (c.registration_date) {
@@ -19,8 +25,10 @@ export function calculateLeadScore(c: Company): number {
     if (days <= 30) score += 40;
   }
   if (c.industry_label && LOCAL_INDUSTRIES.includes(c.industry_label)) score += 30;
-  if (c.website_status === 'no_website_found') score += 25;
-  else if (c.website_status === 'social_only') score += 15;
+  // Only award "no website" points if both status says so AND there's no valid URL
+  const validUrl = hasValidWebsite(c);
+  if (c.website_status === 'no_website_found' && !validUrl) score += 25;
+  else if (c.website_status === 'social_only' && !validUrl) score += 15;
   if (c.phone_status === 'has_phone') score += 10;
   return Math.min(score, 100);
 }
