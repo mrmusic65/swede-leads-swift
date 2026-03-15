@@ -44,11 +44,12 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('full_name, notifications_enabled, default_notify_frequency').eq('id', user.id).single()
-      .then(({ data }) => {
+    (supabase as any).from('profiles').select('full_name, display_name, notifications_enabled, default_notify_frequency').eq('id', user.id).single()
+      .then(({ data }: any) => {
         if (data?.full_name) setFullName(data.full_name);
-        if (data) setNotificationsEnabled((data as any).notifications_enabled ?? true);
-        if (data) setDefaultFrequency((data as any).default_notify_frequency ?? 'instant');
+        if (data?.display_name) setDisplayName(data.display_name);
+        if (data) setNotificationsEnabled(data.notifications_enabled ?? true);
+        if (data) setDefaultFrequency(data.default_notify_frequency ?? 'instant');
         setLoading(false);
       });
     loadTeam();
