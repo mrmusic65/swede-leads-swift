@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown, KanbanSquare, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, ChevronsUpDown, KanbanSquare, BarChart2, Plug } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useMemo, useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -164,6 +164,12 @@ export default function AppSidebar() {
               <Link to="/settings" className="flex items-center gap-3">
                 <Settings className="w-4 h-4 text-muted-foreground" />
                 <span>Inställningar</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild className="px-2.5 py-2.5 rounded-md cursor-pointer">
+              <Link to="/integrations" className="flex items-center gap-3">
+                <Plug className="w-4 h-4 text-muted-foreground" />
+                <span>Integrationer</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />

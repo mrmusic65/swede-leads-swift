@@ -12,6 +12,7 @@ import ImportPage from "./pages/ImportPage";
 import ExportPage from "./pages/ExportPage";
 import AdminPage from "./pages/AdminPage";
 import SettingsPage from "./pages/SettingsPage";
+import IntegrationsPage from "./pages/IntegrationsPage";
 import PipelinePage from "./pages/PipelinePage";
 import StatisticsPage from "./pages/StatisticsPage";
 import WatchlistsPage from "./pages/WatchlistsPage";
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/integrations" element={<IntegrationsPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
