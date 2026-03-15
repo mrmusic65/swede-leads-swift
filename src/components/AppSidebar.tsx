@@ -166,6 +166,12 @@ export default function AppSidebar() {
                 <span>Inställningar</span>
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild className="px-2.5 py-2.5 rounded-md cursor-pointer">
+              <Link to="/integrations" className="flex items-center gap-3">
+                <Plug className="w-4 h-4 text-muted-foreground" />
+                <span>Integrationer</span>
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={signOut} className="px-2.5 py-2.5 rounded-md cursor-pointer flex items-center gap-3">
               <LogOut className="w-4 h-4 text-muted-foreground" />
