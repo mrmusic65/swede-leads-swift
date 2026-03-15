@@ -33,7 +33,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [leadsToday, setLeadsToday] = useState(0);
   const [leadsWeek, setLeadsWeek] = useState(0);
+  const [notesToday, setNotesToday] = useState(0);
   const [latestLeads, setLatestLeads] = useState<any[]>([]);
+  const [leadNoteCounts, setLeadNoteCounts] = useState<Record<string, number>>({});
   const [watchlists, setWatchlists] = useState<WatchlistWithCounts[]>([]);
 
   const [firstName, setFirstName] = useState<string | null>(null);
