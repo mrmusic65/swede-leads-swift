@@ -71,6 +71,7 @@ export const PLANS: PlanConfig[] = [
       'CRM-integration (HubSpot, Pipedrive)',
       'Anpassade datakällor',
       'SLA-garanti',
+      'Obegränsade teammedlemmar',
     ],
   },
 ];
