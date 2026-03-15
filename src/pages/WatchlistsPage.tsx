@@ -74,6 +74,7 @@ export default function WatchlistsPage() {
   useEffect(() => {
     if (!user) return;
     load();
+    setNotifyEmail(user.email || '');
     Promise.all([fetchDistinctCities(), fetchDistinctIndustries()])
       .then(([c, i]) => { setCities(c); setIndustries(i); });
   }, [user]);
