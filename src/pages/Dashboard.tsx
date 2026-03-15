@@ -63,6 +63,7 @@ export default function Dashboard() {
       supabase.from('companies').select('id', { count: 'exact', head: true }).gte('created_at', sevenDaysAgo.toISOString()),
       supabase.from('companies').select('id, company_name, industry_label, city, registration_date').order('created_at', { ascending: false }).limit(5),
       fetchWatchlists(user.id),
+      fetchNotesTodayCount(),
     ]).then(async ([todayRes, weekRes, latestRes, wls]) => {
       setLeadsToday(todayRes.count ?? 0);
       setLeadsWeek(weekRes.count ?? 0);
