@@ -43,6 +43,7 @@ export default function LeadDetail() {
   const [saving, setSaving] = useState(false);
   const [copiedPhone, setCopiedPhone] = useState(false);
   const [copiedInfo, setCopiedInfo] = useState(false);
+  const [copiedContactInfo, setCopiedContactInfo] = useState(false);
 
   // AI generation state
   const [generating, setGenerating] = useState<ContentType | null>(null);
