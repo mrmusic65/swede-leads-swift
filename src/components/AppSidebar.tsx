@@ -84,7 +84,7 @@ export default function AppSidebar() {
 
   const avatarColor = useMemo(() => getAvatarColor(user?.email), [user?.email]);
   const initial = user?.email?.charAt(0).toUpperCase() ?? '?';
-  const displayName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
+  const displayName = profile?.display_name || profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   return (
     <aside className="hidden lg:flex flex-col w-60 min-h-screen"
