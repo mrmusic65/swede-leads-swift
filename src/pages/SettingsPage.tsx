@@ -68,7 +68,7 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     if (!user) return;
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({ full_name: fullName }).eq('id', user.id);
+    const { error } = await (supabase as any).from('profiles').update({ full_name: fullName, display_name: displayName || null }).eq('id', user.id);
     toast[error ? 'error' : 'success'](error ? 'Kunde inte spara profil' : 'Profil uppdaterad');
     setSaving(false);
   };
