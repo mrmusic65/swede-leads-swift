@@ -85,18 +85,6 @@ export default function LeadDetail() {
     toast({ title: 'Kopierat', description: 'Bolagsinformation kopierad.' });
   };
 
-  const scoreExplanation: string[] = [];
-  if (company.registration_date) {
-    const days = Math.floor((Date.now() - new Date(company.registration_date).getTime()) / (1000 * 60 * 60 * 24));
-    if (days <= 30) scoreExplanation.push('Nyregistrerat (senaste 30 dagarna): +40');
-  }
-  const localIndustries = ['Restaurang & Café', 'Bygg & Renovation', 'Frisör & Skönhet', 'Städ & Facility', 'Hälsa & Träning', 'Bilverkstad & Motor', 'Hemtjänst & Omsorg', 'Trädgård & Markarbete', 'El & VVS', 'Flyttfirma', 'Målare & Tapetserare', 'Tandvård', 'Veterinär'];
-  if (company.industry_label && localIndustries.includes(company.industry_label)) {
-    scoreExplanation.push('Lokal tjänstebransch: +30');
-  }
-  if (company.website_status === 'no_website_found') scoreExplanation.push('Ingen hemsida: +25');
-  else if (company.website_status === 'social_only') scoreExplanation.push('Bara sociala medier: +15');
-  if (company.phone_status === 'has_phone') scoreExplanation.push('Telefonnummer tillgängligt: +10');
 
   const infoItems = [
     { icon: Hash, label: 'Org.nummer', value: company.org_number },
