@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.run-watchlist-alerts]
 verify_jwt = false
+
+[functions.send-watchlist-notifications]
+verify_jwt = false
