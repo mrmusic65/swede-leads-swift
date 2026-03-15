@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "LeadRadar <notifications@resend.dev>",
+          from: "LeadRadar <notifications@leadradar.nu>",
           to: [email],
           subject,
           html,
