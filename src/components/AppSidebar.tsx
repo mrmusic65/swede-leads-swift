@@ -57,20 +57,34 @@ export default function AppSidebar() {
     },
   });
 
+  const { data: profile } = useQuery({
+    queryKey: ['sidebar-profile', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user!.id)
+        .single();
+      return data;
+    },
+  });
+
   const planLabel = subscription
     ? `${TIER_LABELS[subscription.plan_tier] ?? subscription.plan_tier} plan`
     : 'Gratis';
 
   const avatarColor = useMemo(() => getAvatarColor(user?.email), [user?.email]);
   const initial = user?.email?.charAt(0).toUpperCase() ?? '?';
-  const displayName = user?.email?.split('@')[0] ?? '';
+  const displayName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || '';
 
   return (
-    <aside className="hidden lg:flex flex-col w-60 min-h-screen border-r border-sidebar-border"
+    <aside className="hidden lg:flex flex-col w-60 min-h-screen"
       style={{
-        background: 'linear-gradient(180deg, hsl(224 30% 8%) 0%, hsl(224 35% 6%) 100%)',
+        background: 'linear-gradient(180deg, hsl(224 30% 8%) 0%, hsl(224 35% 5%) 100%)',
       }}
     >
+      {/* Logo */}
       <div className="flex items-center gap-2.5 px-5 py-5">
         <div className="w-8 h-8 rounded-lg bg-sidebar-primary flex items-center justify-center shadow-lg shadow-sidebar-primary/20">
           <Zap className="w-4 h-4 text-sidebar-primary-foreground" />
@@ -78,6 +92,7 @@ export default function AppSidebar() {
         <span className="text-base font-bold text-sidebar-accent-foreground tracking-tight">LeadRadar</span>
       </div>
 
+      {/* Nav */}
       <nav className="flex-1 px-3 py-2 space-y-0.5">
         {navItems.map(item => {
           const active = location.pathname === item.to || (item.to !== '/' && location.pathname.startsWith(item.to));
@@ -85,22 +100,23 @@ export default function AppSidebar() {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
+              className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 ${
                 active
-                  ? 'bg-sidebar-primary/15 text-sidebar-primary shadow-sm shadow-sidebar-primary/10'
+                  ? 'bg-sidebar-primary/10 text-sidebar-primary'
                   : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
               }`}
             >
+              {active && (
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 rounded-r-full bg-sidebar-primary" />
+              )}
               <item.icon className={`w-4 h-4 ${active ? 'text-sidebar-primary' : ''}`} />
               {item.label}
-              {active && (
-                <div className="ml-auto w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-              )}
             </Link>
           );
         })}
       </nav>
 
+      {/* User profile */}
       <div className="px-3 py-3 border-t border-sidebar-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

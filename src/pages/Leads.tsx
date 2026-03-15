@@ -3,11 +3,25 @@ import { Link } from 'react-router-dom';
 import { fetchCompanies, fetchDistinctCities, fetchDistinctIndustries, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
 import LeadStatusBadge from '@/components/LeadStatusBadge';
+import IndustryBadge from '@/components/IndustryBadge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Download, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function isNewLead(dateStr: string | null): boolean {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  return now.getTime() - d.getTime() < 7 * 24 * 60 * 60 * 1000;
+}
 
 const PAGE_SIZE = 30;
 
@@ -157,16 +171,24 @@ export default function Leads() {
                       className="border-b border-border last:border-0 hover-row"
                     >
                       <td className="px-5 py-5 font-medium text-foreground">
-                        {c.company_name}
+                        <div className="flex items-center gap-2">
+                          {c.company_name}
+                          {isNewLead(c.registration_date) && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                              Nytt
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-5 text-muted-foreground hidden sm:table-cell">
                         {c.city || '—'}
                       </td>
-                      <td className="px-5 py-5 text-muted-foreground hidden md:table-cell">
-                        {c.industry_label || '—'}
+                      <td className="px-5 py-5 hidden md:table-cell">
+                        <IndustryBadge industry={c.industry_label} />
                       </td>
                       <td className="px-5 py-5 text-muted-foreground hidden lg:table-cell">
-                        {c.registration_date || '—'}
+                        {formatDate(c.registration_date)}
                       </td>
                       <td className="px-5 py-5 text-center">
                         <ScoreBadge score={score} />

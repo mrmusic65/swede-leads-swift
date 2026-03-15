@@ -7,9 +7,24 @@ import { Users, TrendingUp, Eye, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import IndustryBadge from '@/components/IndustryBadge';
 
 interface WatchlistWithCounts extends SavedWatchlist {
   d7: number;
+}
+
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return '–';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('sv-SE', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function isNewLead(dateStr: string | null): boolean {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  const now = new Date();
+  const diff = now.getTime() - d.getTime();
+  return diff < 7 * 24 * 60 * 60 * 1000;
 }
 
 export default function Dashboard() {
@@ -77,30 +92,57 @@ export default function Dashboard() {
   }
 
   const kpis = [
-    { label: 'Nya leads idag', value: leadsToday, icon: Users, borderClass: 'kpi-border-primary', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
-    { label: 'Nya leads denna vecka', value: leadsWeek, icon: TrendingUp, borderClass: 'kpi-border-success', iconBg: 'bg-success/10', iconColor: 'text-success' },
-    { label: 'Aktiva bevakningar', value: watchlists.length, icon: Eye, borderClass: 'kpi-border-info', iconBg: 'bg-info/10', iconColor: 'text-info' },
+    {
+      label: 'Nya leads idag',
+      value: leadsToday,
+      icon: Users,
+      borderClass: 'kpi-border-primary',
+      iconBg: 'bg-primary/10',
+      iconColor: 'text-primary',
+      trend: `↑ ${leadsWeek} denna vecka`,
+    },
+    {
+      label: 'Nya leads denna vecka',
+      value: leadsWeek,
+      icon: TrendingUp,
+      borderClass: 'kpi-border-success',
+      iconBg: 'bg-success/10',
+      iconColor: 'text-success',
+      trend: null,
+    },
+    {
+      label: 'Aktiva bevakningar',
+      value: watchlists.length,
+      icon: Eye,
+      borderClass: 'kpi-border-info',
+      iconBg: 'bg-info/10',
+      iconColor: 'text-info',
+      trend: null,
+    },
   ];
 
   return (
-    <div className="space-y-8 max-w-4xl animate-fade-in">
+    <div className="space-y-10 max-w-4xl animate-fade-in">
       {/* Welcome */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           {firstName ? `Välkommen tillbaka, ${firstName} 👋` : 'Välkommen tillbaka! 👋'}
         </h1>
-        <p className="text-sm text-muted-foreground mt-1.5 capitalize">{dateStr}</p>
+        <p className="text-sm text-muted-foreground mt-1 capitalize">{dateStr}</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {kpis.map(kpi => (
           <Card key={kpi.label} className={kpi.borderClass}>
-            <CardContent className="pt-6 pb-6 px-6">
+            <CardContent className="pt-6 pb-5 px-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">{kpi.label}</p>
-                  <p className="text-4xl font-extrabold mt-2 text-foreground">{kpi.value}</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</p>
+                  <p className="text-3xl font-bold tracking-tight mt-2 text-foreground">{kpi.value}</p>
+                  {kpi.trend && (
+                    <p className="text-xs text-muted-foreground mt-1.5">{kpi.trend}</p>
+                  )}
                 </div>
                 <div className={`w-10 h-10 rounded-xl ${kpi.iconBg} flex items-center justify-center ${kpi.iconColor}`}>
                   <kpi.icon className="w-5 h-5" />
@@ -112,82 +154,92 @@ export default function Dashboard() {
       </div>
 
       {/* Latest Leads */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-bold">Senaste leads</CardTitle>
-            <Link to="/leads">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs hover:bg-accent transition-all duration-150">
-                Visa alla leads <ArrowRight className="w-3 h-3" />
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {latestLeads.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">Inga leads ännu.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bolagsnamn</th>
-                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bransch</th>
-                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Stad</th>
-                    <th className="pb-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider text-right">Reg.datum</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {latestLeads.map(lead => (
-                    <tr key={lead.id} className="border-b last:border-0 hover-row">
-                      <td className="py-3.5">
-                        <Link to={`/leads/${lead.id}`} className="font-medium hover:text-primary transition-colors duration-150">
-                          {lead.company_name}
-                        </Link>
-                      </td>
-                      <td className="py-3.5 text-muted-foreground">{lead.industry_label || '–'}</td>
-                      <td className="py-3.5 text-muted-foreground">{lead.city || '–'}</td>
-                      <td className="py-3.5 text-muted-foreground text-right">{lead.registration_date || '–'}</td>
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Senaste leads</h2>
+          <Link to="/leads">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs rounded-full border-border hover:bg-accent transition-all duration-150">
+              Visa alla leads <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            {latestLeads.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-10 text-center">Inga leads ännu.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left px-5 py-3.5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bolagsnamn</th>
+                      <th className="text-left px-5 py-3.5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Bransch</th>
+                      <th className="text-left px-5 py-3.5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Stad</th>
+                      <th className="text-right px-5 py-3.5 font-semibold text-muted-foreground text-xs uppercase tracking-wider">Reg.datum</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </thead>
+                  <tbody>
+                    {latestLeads.map(lead => (
+                      <tr key={lead.id} className="border-b border-border last:border-0 hover-row">
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-2">
+                            <Link to={`/leads/${lead.id}`} className="font-medium text-foreground hover:text-primary transition-colors duration-150">
+                              {lead.company_name}
+                            </Link>
+                            {isNewLead(lead.registration_date) && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                Nytt
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4">
+                          <IndustryBadge industry={lead.industry_label} />
+                        </td>
+                        <td className="px-5 py-4 text-muted-foreground">{lead.city || '–'}</td>
+                        <td className="px-5 py-4 text-muted-foreground text-right">{formatDate(lead.registration_date)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Watchlists */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base font-bold">Dina bevakningar</CardTitle>
-            <Link to="/watchlists">
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs hover:bg-accent transition-all duration-150">
-                Hantera bevakningar <ArrowRight className="w-3 h-3" />
-              </Button>
-            </Link>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {watchlists.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">Inga bevakningar ännu.</p>
-          ) : (
-            <div className="space-y-3">
-              {watchlists.map(w => (
-                <Link
-                  key={w.id}
-                  to={`/watchlists/${w.id}`}
-                  className="flex items-center justify-between py-3 px-4 rounded-lg border border-border/50 hover:bg-accent/50 hover:border-primary/20 transition-all duration-150"
-                >
-                  <span className="font-medium text-sm">{w.name}</span>
-                  <span className="text-sm text-muted-foreground">{w.d7} matchningar (7d)</span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Dina bevakningar</h2>
+          <Link to="/watchlists">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs rounded-full border-border hover:bg-accent transition-all duration-150">
+              Hantera bevakningar <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            {watchlists.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-10 text-center">Inga bevakningar ännu.</p>
+            ) : (
+              <div className="divide-y divide-border">
+                {watchlists.map(w => (
+                  <Link
+                    key={w.id}
+                    to={`/watchlists/${w.id}`}
+                    className="flex items-center justify-between py-3.5 px-5 hover:bg-muted/40 transition-all duration-150"
+                  >
+                    <span className="font-medium text-sm text-foreground">{w.name}</span>
+                    <span className="text-xs text-muted-foreground">{w.d7} matchningar (7d)</span>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
