@@ -39,6 +39,7 @@ export const PLANS: PlanConfig[] = [
       'Filter på bransch & stad',
       'CSV-export',
       'E-postaviseringar',
+      '1 teammedlem',
     ],
   },
   {
@@ -53,6 +54,7 @@ export const PLANS: PlanConfig[] = [
       'Watchlists & alerts',
       'API-access',
       'Prioriterad support',
+      'Upp till 3 teammedlemmar',
     ],
     highlighted: true,
   },
@@ -69,6 +71,7 @@ export const PLANS: PlanConfig[] = [
       'CRM-integration (HubSpot, Pipedrive)',
       'Anpassade datakällor',
       'SLA-garanti',
+      'Obegränsade teammedlemmar',
     ],
   },
 ];

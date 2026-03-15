@@ -73,6 +73,7 @@ export type Database = {
           sni_code: string | null
           source_primary: string | null
           source_provider: string | null
+          team_id: string | null
           updated_at: string
           vat_registered: boolean | null
           website_status: Database["public"]["Enums"]["website_status"]
@@ -104,6 +105,7 @@ export type Database = {
           sni_code?: string | null
           source_primary?: string | null
           source_provider?: string | null
+          team_id?: string | null
           updated_at?: string
           vat_registered?: boolean | null
           website_status?: Database["public"]["Enums"]["website_status"]
@@ -135,12 +137,21 @@ export type Database = {
           sni_code?: string | null
           source_primary?: string | null
           source_provider?: string | null
+          team_id?: string | null
           updated_at?: string
           vat_registered?: boolean | null
           website_status?: Database["public"]["Enums"]["website_status"]
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "companies_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       company_events: {
         Row: {
@@ -411,6 +422,7 @@ export type Database = {
           id: string
           notifications_enabled: boolean
           stripe_customer_id: string | null
+          team_id: string | null
         }
         Insert: {
           created_at?: string
@@ -420,6 +432,7 @@ export type Database = {
           id: string
           notifications_enabled?: boolean
           stripe_customer_id?: string | null
+          team_id?: string | null
         }
         Update: {
           created_at?: string
@@ -429,8 +442,17 @@ export type Database = {
           id?: string
           notifications_enabled?: boolean
           stripe_customer_id?: string | null
+          team_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_filters: {
         Row: {
@@ -439,6 +461,7 @@ export type Database = {
           id: string
           is_default: boolean
           name: string
+          team_id: string | null
           user_id: string
         }
         Insert: {
@@ -447,6 +470,7 @@ export type Database = {
           id?: string
           is_default?: boolean
           name: string
+          team_id?: string | null
           user_id: string
         }
         Update: {
@@ -455,9 +479,18 @@ export type Database = {
           id?: string
           is_default?: boolean
           name?: string
+          team_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_filters_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_watchlists: {
         Row: {
@@ -468,6 +501,7 @@ export type Database = {
           notification_email: string | null
           notify_enabled: boolean
           notify_frequency: string
+          team_id: string | null
           user_id: string
         }
         Insert: {
@@ -478,6 +512,7 @@ export type Database = {
           notification_email?: string | null
           notify_enabled?: boolean
           notify_frequency?: string
+          team_id?: string | null
           user_id: string
         }
         Update: {
@@ -488,9 +523,18 @@ export type Database = {
           notification_email?: string | null
           notify_enabled?: boolean
           notify_frequency?: string
+          team_id?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_watchlists_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -534,12 +578,82 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          created_at: string
+          id: string
+          invited_email: string | null
+          role: string
+          status: string
+          team_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_email?: string | null
+          role?: string
+          status?: string
+          team_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_email?: string | null
+          role?: string
+          status?: string
+          team_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          plan: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          plan?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          plan?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_team_id: { Args: { _user_id: string }; Returns: string }
+      is_team_admin: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_team_member: {
+        Args: { _team_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       company_event_type:
