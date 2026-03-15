@@ -12,9 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  ArrowLeft, Mail, MessageSquare, Megaphone, Building2, MapPin, Calendar,
+  ArrowLeft, Megaphone, Building2, MapPin, Calendar,
   Phone, Globe, Hash, Briefcase, StickyNote, Copy, Check, Loader2, RefreshCw,
-  X, ExternalLink, Linkedin, Save, ChevronDown, ChevronUp, Clock
+  X, Save, ChevronDown, ChevronUp, Clock, PhoneCall, ClipboardList, Info
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
