@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.send-watchlist-notifications]
 verify_jwt = false
+
+[functions.generate-lead-content]
+verify_jwt = false
