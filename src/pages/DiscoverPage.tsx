@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchWatchlists, fetchWatchlistMatches, type SavedWatchlist } from '@/lib/watchlist-api';
+import { calculateLeadScore, type Company } from '@/lib/api';
 import { Sparkles, Search, Plus, ArrowRight, Building2, Truck, Cpu, Hammer, ShoppingBag, Utensils, Heart, Briefcase } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
