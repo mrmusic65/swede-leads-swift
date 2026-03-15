@@ -149,6 +149,11 @@ export default function SettingsPage() {
             <Input id="email" value={user?.email ?? ''} disabled className="bg-muted/50" />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="displayName" className="text-sm flex items-center gap-1.5">Visningsnamn</Label>
+            <Input id="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="T.ex. Erik, Säljteamet" maxLength={100} />
+            <p className="text-xs text-muted-foreground">Visas i appen och för dina teammedlemmar</p>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="fullName" className="text-sm">Fullständigt namn</Label>
             <Input id="fullName" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Ange ditt namn" />
           </div>
