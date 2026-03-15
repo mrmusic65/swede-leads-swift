@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { fetchCompanies, fetchDistinctCities, fetchDistinctIndustries, calculateLeadScore, exportCompaniesCSV, type LeadFilters, type Company } from '@/lib/api';
 import ScoreBadge from '@/components/ScoreBadge';
 import LeadStatusBadge from '@/components/LeadStatusBadge';
 import IndustryBadge from '@/components/IndustryBadge';
+import LeadSlideOver from '@/components/LeadSlideOver';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
