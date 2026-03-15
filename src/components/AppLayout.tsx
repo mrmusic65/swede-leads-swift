@@ -30,8 +30,8 @@ export default function AppLayout() {
           <MobileNav />
         </div>
         <main
-          className="flex-1 p-4 md:p-6 lg:p-8 overflow-auto"
-          style={{
+          className={`flex-1 overflow-auto ${isDiscover ? '' : 'p-4 md:p-6 lg:p-8'}`}
+          style={isDiscover ? {} : {
             background: `
               radial-gradient(ellipse 60% 50% at 85% 10%, hsl(205 100% 97% / 0.6), transparent 70%),
               linear-gradient(180deg, hsl(40 10% 98%) 0%, hsl(225 14% 97%) 100%)
