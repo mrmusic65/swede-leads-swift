@@ -62,6 +62,7 @@ const App = () => (
               <Route path="/subscription" element={<SubscriptionPage />} />
               <Route path="/subscription/success" element={<SubscriptionSuccessPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/integrations" element={<IntegrationsPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
