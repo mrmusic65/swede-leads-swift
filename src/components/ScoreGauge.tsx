@@ -15,8 +15,15 @@ interface Criterion {
   met: boolean;
 }
 
+function hasValidWebsite(c: Company): boolean {
+  const url = c.website_url;
+  if (!url || url.trim() === '' || url === '—') return false;
+  try { new URL(url); return true; } catch { return false; }
+}
+
 export function getScoreCriteria(c: Company): Criterion[] {
   const criteria: Criterion[] = [];
+  const validUrl = hasValidWebsite(c);
 
   // Registration recency
   let regMet = false;
@@ -30,12 +37,12 @@ export function getScoreCriteria(c: Company): Criterion[] {
   const industryMet = !!(c.industry_label && LOCAL_INDUSTRIES.includes(c.industry_label));
   criteria.push({ label: 'Lokal tjänstebransch', points: 30, met: industryMet });
 
-  // No website
-  const noWebMet = c.website_status === 'no_website_found';
+  // No website — only if status says so AND no valid URL exists
+  const noWebMet = c.website_status === 'no_website_found' && !validUrl;
   criteria.push({ label: 'Ingen hemsida', points: 25, met: noWebMet });
 
-  // Social only
-  const socialMet = c.website_status === 'social_only';
+  // Social only — only if no valid URL exists
+  const socialMet = c.website_status === 'social_only' && !validUrl;
   criteria.push({ label: 'Bara sociala medier', points: 15, met: socialMet && !noWebMet });
 
   // Has phone
