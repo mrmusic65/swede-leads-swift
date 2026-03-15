@@ -363,25 +363,40 @@ export default function LeadDetail() {
         </Card>
       </div>
 
-      {/* AI Generation Buttons */}
-      <div className="flex flex-wrap gap-2">
-        {aiButtons.map(btn => (
+      {/* AI Generation & Action Buttons */}
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
+          {aiButtons.map(btn => (
+            <Button
+              key={btn.type}
+              size="sm"
+              variant={generatedContent?.type === btn.type ? 'default' : btn.variant}
+              className="gap-1.5"
+              disabled={generating !== null}
+              onClick={() => handleGenerate(btn.type)}
+            >
+              {generating === btn.type ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <btn.icon className="w-3.5 h-3.5" />
+              )}
+              {generating === btn.type ? 'Genererar...' : btn.label}
+            </Button>
+          ))}
           <Button
-            key={btn.type}
             size="sm"
-            variant={generatedContent?.type === btn.type ? 'default' : btn.variant}
-            className="gap-1.5"
-            disabled={generating !== null}
-            onClick={() => handleGenerate(btn.type)}
+            variant="outline"
+            className={`gap-1.5 transition-colors ${copiedContactInfo ? 'border-emerald-500 text-emerald-600' : ''}`}
+            onClick={handleCopyContactInfo}
           >
-            {generating === btn.type ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <btn.icon className="w-3.5 h-3.5" />
-            )}
-            {generating === btn.type ? 'Genererar...' : btn.label}
+            {copiedContactInfo ? <Check className="w-3.5 h-3.5" /> : <ClipboardList className="w-3.5 h-3.5" />}
+            {copiedContactInfo ? 'Kopierat!' : 'Kopiera kontaktinfo'}
           </Button>
-        ))}
+        </div>
+        <p className="text-xs text-muted-foreground flex items-center gap-1">
+          <Info className="w-3 h-3 shrink-0" />
+          E-postadresser till beslutsfattare kommer inom kort via vår Creditsafe-integration.
+        </p>
       </div>
 
       {/* Generated Content Display */}
