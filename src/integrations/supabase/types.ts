@@ -67,6 +67,7 @@ export type Database = {
           org_number: string | null
           phone_number: string | null
           phone_status: Database["public"]["Enums"]["phone_status"]
+          pipeline_stage: string
           postal_code: string | null
           registration_date: string | null
           sni_code: string | null
@@ -97,6 +98,7 @@ export type Database = {
           org_number?: string | null
           phone_number?: string | null
           phone_status?: Database["public"]["Enums"]["phone_status"]
+          pipeline_stage?: string
           postal_code?: string | null
           registration_date?: string | null
           sni_code?: string | null
@@ -127,6 +129,7 @@ export type Database = {
           org_number?: string | null
           phone_number?: string | null
           phone_status?: Database["public"]["Enums"]["phone_status"]
+          pipeline_stage?: string
           postal_code?: string | null
           registration_date?: string | null
           sni_code?: string | null
