@@ -19,9 +19,12 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, Bell, ArrowRight, ChevronDown, Eye, Star, ArrowUpRight, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Bell, ArrowRight, ChevronDown, Eye, Star, ArrowUpRight, Loader2, Mail } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const EVENT_TYPES = [
   { value: 'company_registered', label: 'Nyregistrerat' },
