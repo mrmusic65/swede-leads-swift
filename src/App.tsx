@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/Dashboard";
+import DiscoverPage from "./pages/DiscoverPage";
 import Leads from "./pages/Leads";
 import LeadDetail from "./pages/LeadDetail";
 import ImportPage from "./pages/ImportPage";
@@ -50,7 +51,9 @@ const App = () => (
             <Route path="/auth" element={<AuthRoute><AuthPage /></AuthRoute>} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Navigate to="/discover" replace />} />
+              <Route path="/discover" element={<DiscoverPage />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/leads" element={<Leads />} />
               <Route path="/leads/:id" element={<LeadDetail />} />
               <Route path="/pipeline" element={<PipelinePage />} />
