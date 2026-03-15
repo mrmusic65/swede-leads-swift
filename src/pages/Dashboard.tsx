@@ -207,6 +207,17 @@ export default function Dashboard() {
                             <Link to={`/leads/${lead.id}`} className="font-medium text-foreground hover:text-primary transition-colors duration-150">
                               {lead.company_name}
                             </Link>
+                            {leadNoteCounts[lead.id] > 0 && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <span className="inline-flex items-center gap-1 text-muted-foreground">
+                                    <MessageSquare className="w-3 h-3" />
+                                    <span className="text-[10px]">{leadNoteCounts[lead.id]}</span>
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent className="text-xs">{leadNoteCounts[lead.id]} anteckning{leadNoteCounts[lead.id] > 1 ? 'ar' : ''}</TooltipContent>
+                              </Tooltip>
+                            )}
                             {isNewLead(lead.registration_date) && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
