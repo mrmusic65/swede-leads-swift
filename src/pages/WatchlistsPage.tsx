@@ -345,6 +345,43 @@ export default function WatchlistsPage() {
                 </CollapsibleContent>
               </Collapsible>
 
+              {/* Notification settings */}
+              <div className="space-y-4 pt-2 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor="notify-toggle" className="text-sm font-medium">Aktivera e-postnotifikationer</Label>
+                  </div>
+                  <Switch id="notify-toggle" checked={notifyEnabled} onCheckedChange={setNotifyEnabled} />
+                </div>
+
+                {notifyEnabled && (
+                  <div className="space-y-4 pl-6">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Notifikations-e-post</label>
+                      <Input
+                        type="email"
+                        placeholder={user?.email || 'din@email.se'}
+                        value={notifyEmail}
+                        onChange={e => setNotifyEmail(e.target.value)}
+                        className="h-9 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Frekvens</label>
+                      <Select value={notifyFrequency} onValueChange={setNotifyFrequency}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="instant">Direkt</SelectItem>
+                          <SelectItem value="daily">Daglig sammanfattning</SelectItem>
+                          <SelectItem value="weekly">Veckovis sammanfattning</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* Create button */}
               <div className="pt-2">
                 <Button
