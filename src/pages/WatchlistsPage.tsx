@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Plus, Trash2, Bell, ArrowRight, ChevronDown, Eye } from 'lucide-react';
+import { Plus, Trash2, Bell, ArrowRight, ChevronDown, Eye, Star, ArrowUpRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const EVENT_TYPES = [
@@ -52,6 +52,7 @@ const BOOL_OPTIONS = [
 
 export default function WatchlistsPage() {
   const { user } = useAuth();
+  const formRef = useRef<HTMLDivElement>(null);
   const [watchlists, setWatchlists] = useState<SavedWatchlist[]>([]);
   const [matchCounts, setMatchCounts] = useState<Record<string, { d1: number; d7: number; d30: number }>>({});
   const [loading, setLoading] = useState(true);
@@ -124,11 +125,19 @@ export default function WatchlistsPage() {
 
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
+  const placeholderName = useMemo(() => {
+    const parts: string[] = [];
+    if (filters.industry_label) parts.push(filters.industry_label.length > 20 ? filters.industry_label.slice(0, 18) + '…' : filters.industry_label);
+    if (filters.city) parts.push(`i ${filters.city}`);
+    if (parts.length > 0) return parts.join(' ');
+    return "T.ex. 'Nya IT-bolag i Stockholm'";
+  }, [filters.industry_label, filters.city]);
+
   function summarizeFilters(f: WatchlistFilters): string {
     const parts: string[] = [];
     if (f.city) parts.push(f.city);
     if (f.county) parts.push(f.county);
-    if (f.industry_label) parts.push(f.industry_label);
+    if (f.industry_label) parts.push(f.industry_label.length > 30 ? f.industry_label.slice(0, 28) + '…' : f.industry_label);
     if (f.company_form) parts.push(f.company_form);
     if (f.website_status) parts.push(WEBSITE_STATUSES.find(s => s.value === f.website_status)?.label ?? f.website_status);
     if (f.phone_status) parts.push(PHONE_STATUSES.find(s => s.value === f.phone_status)?.label ?? f.phone_status);
@@ -136,246 +145,312 @@ export default function WatchlistsPage() {
     return parts.length > 0 ? parts.join(' · ') : 'Alla bolag';
   }
 
+  const scrollToForm = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   return (
-    <div className="space-y-8 max-w-3xl animate-fade-in">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Bevakningar</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Bevakningar</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Få automatiska notiser när nya bolag matchar dina kriterier
         </p>
       </div>
 
-      {/* Create watchlist */}
-      <Card>
-        <CardContent className="pt-6 space-y-5">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-foreground">Namn på bevakning</label>
-            <Input
-              placeholder="T.ex. 'Nya restauranger i Stockholm'"
-              value={name}
-              onChange={e => setName(e.target.value)}
-              className="h-10"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Bransch</label>
-              <Select value={filters.industry_label || '_none'} onValueChange={v => updateFilter('industry_label', v)}>
-                <SelectTrigger className="h-10"><SelectValue placeholder="Alla branscher" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">Alla branscher</SelectItem>
-                  {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-sm font-medium text-foreground">Stad</label>
-              <Select value={filters.city || '_none'} onValueChange={v => updateFilter('city', v)}>
-                <SelectTrigger className="h-10"><SelectValue placeholder="Alla städer" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">Alla städer</SelectItem>
-                  {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Advanced filters */}
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <CollapsibleTrigger asChild>
-              <button className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                <ChevronDown className={`w-4 h-4 transition-transform ${advancedOpen ? 'rotate-180' : ''}`} />
-                Avancerade filter
-              </button>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Bolagsform</label>
-                  <Select value={filters.company_form || '_none'} onValueChange={v => updateFilter('company_form', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla bolagsformer</SelectItem>
-                      {['AB', 'HB', 'EF', 'KB', 'Stiftelse'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+      {/* Split view */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+        {/* Left: Create form (3/5 = 60%) */}
+        <div className="lg:col-span-3" ref={formRef}>
+          <Card className="overflow-hidden">
+            <div
+              className="px-6 py-5 border-b border-border"
+              style={{
+                background: 'linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.3) 100%)',
+              }}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Bell className="w-4 h-4 text-primary" />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">F-skatt</label>
-                  <Select value={filters.f_tax_registered || '_none'} onValueChange={v => updateFilter('f_tax_registered', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla</SelectItem>
-                      {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Momsregistrerad</label>
-                  <Select value={filters.vat_registered || '_none'} onValueChange={v => updateFilter('vat_registered', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla</SelectItem>
-                      {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Arbetsgivare</label>
-                  <Select value={filters.employer_registered || '_none'} onValueChange={v => updateFilter('employer_registered', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla</SelectItem>
-                      {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Hemsidestatus</label>
-                  <Select value={filters.website_status || '_none'} onValueChange={v => updateFilter('website_status', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla</SelectItem>
-                      {WEBSITE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Telefonstatus</label>
-                  <Select value={filters.phone_status || '_none'} onValueChange={v => updateFilter('phone_status', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla</SelectItem>
-                      {PHONE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Händelsetyp</label>
-                  <Select value={filters.event_type || '_none'} onValueChange={v => updateFilter('event_type', v)}>
-                    <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="_none">Alla händelser</SelectItem>
-                      {EVENT_TYPES.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Registrerad efter</label>
-                  <Input
-                    type="date"
-                    value={filters.registeredAfter || ''}
-                    onChange={e => updateFilter('registeredAfter', e.target.value || '_none')}
-                    className="h-9 text-xs"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Registrerad före</label>
-                  <Input
-                    type="date"
-                    value={filters.registeredBefore || ''}
-                    onChange={e => updateFilter('registeredBefore', e.target.value || '_none')}
-                    className="h-9 text-xs"
-                  />
+                <div>
+                  <h2 className="text-base font-semibold text-foreground">Ny bevakning</h2>
+                  <p className="text-xs text-muted-foreground">Välj kriterier och ge din bevakning ett namn</p>
                 </div>
               </div>
-            </CollapsibleContent>
-          </Collapsible>
+            </div>
 
-          {/* Create button */}
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-muted-foreground">
-              {activeFilterCount > 0 ? `${activeFilterCount} filter aktiva` : 'Inga filter — matchar alla bolag'}
-            </span>
-            <Button onClick={handleCreate} disabled={!name.trim() || creating} className="gap-1.5">
-              <Plus className="w-4 h-4" />
-              {creating ? 'Skapar...' : 'Skapa bevakning'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <CardContent className="pt-6 space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">Namn på bevakning</label>
+                <Input
+                  placeholder={placeholderName}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="h-10 border-border focus-visible:ring-primary"
+                />
+              </div>
 
-      {/* Watchlist list */}
-      <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
-          Dina bevakningar
-        </h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Bransch</label>
+                  <Select value={filters.industry_label || '_none'} onValueChange={v => updateFilter('industry_label', v)}>
+                    <SelectTrigger className="h-10 border-border focus:ring-primary"><SelectValue placeholder="Alla branscher" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Alla branscher</SelectItem>
+                      {industries.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-lg" />)}
-          </div>
-        ) : watchlists.length === 0 ? (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <Bell className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-              <p className="text-muted-foreground">Inga bevakningar ännu. Skapa din första ovan.</p>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-foreground">Stad</label>
+                  <Select value={filters.city || '_none'} onValueChange={v => updateFilter('city', v)}>
+                    <SelectTrigger className="h-10 border-border focus:ring-primary"><SelectValue placeholder="Alla städer" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Alla städer</SelectItem>
+                      {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Advanced filters */}
+              <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                <CollapsibleTrigger asChild>
+                  <button className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${advancedOpen ? 'rotate-180' : ''}`} />
+                    Avancerade filter
+                    {activeFilterCount > 2 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 rounded-full ml-1">
+                        {activeFilterCount - (filters.industry_label ? 1 : 0) - (filters.city ? 1 : 0)}
+                      </Badge>
+                    )}
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-4 space-y-4 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:slide-in-from-top-2 data-[state=closed]:slide-out-to-top-2 duration-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Bolagsform</label>
+                      <Select value={filters.company_form || '_none'} onValueChange={v => updateFilter('company_form', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla bolagsformer</SelectItem>
+                          {['AB', 'HB', 'EF', 'KB', 'Stiftelse'].map(f => <SelectItem key={f} value={f}>{f}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">F-skatt</label>
+                      <Select value={filters.f_tax_registered || '_none'} onValueChange={v => updateFilter('f_tax_registered', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla</SelectItem>
+                          {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Momsregistrerad</label>
+                      <Select value={filters.vat_registered || '_none'} onValueChange={v => updateFilter('vat_registered', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla</SelectItem>
+                          {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Arbetsgivare</label>
+                      <Select value={filters.employer_registered || '_none'} onValueChange={v => updateFilter('employer_registered', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla</SelectItem>
+                          {BOOL_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Hemsidestatus</label>
+                      <Select value={filters.website_status || '_none'} onValueChange={v => updateFilter('website_status', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla</SelectItem>
+                          {WEBSITE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Telefonstatus</label>
+                      <Select value={filters.phone_status || '_none'} onValueChange={v => updateFilter('phone_status', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla</SelectItem>
+                          {PHONE_STATUSES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Händelsetyp</label>
+                      <Select value={filters.event_type || '_none'} onValueChange={v => updateFilter('event_type', v)}>
+                        <SelectTrigger className="h-9 text-xs"><SelectValue placeholder="Alla" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Alla händelser</SelectItem>
+                          {EVENT_TYPES.map(e => <SelectItem key={e.value} value={e.value}>{e.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Registrerad efter</label>
+                      <Input
+                        type="date"
+                        value={filters.registeredAfter || ''}
+                        onChange={e => updateFilter('registeredAfter', e.target.value || '_none')}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-muted-foreground">Registrerad före</label>
+                      <Input
+                        type="date"
+                        value={filters.registeredBefore || ''}
+                        onChange={e => updateFilter('registeredBefore', e.target.value || '_none')}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Create button */}
+              <div className="pt-2">
+                <Button
+                  onClick={handleCreate}
+                  disabled={!name.trim() || creating}
+                  className="w-full gap-2 h-11 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
+                >
+                  {creating ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Skapar bevakning…</>
+                  ) : (
+                    <><Plus className="w-4 h-4" /> Skapa bevakning</>
+                  )}
+                </Button>
+                {activeFilterCount > 0 && (
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    {activeFilterCount} filter aktiva
+                  </p>
+                )}
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          <div className="space-y-3">
-            {watchlists.map(wl => {
-              const f = wl.filters_json as WatchlistFilters;
-              const counts = matchCounts[wl.id] ?? { d1: 0, d7: 0, d30: 0 };
+        </div>
 
-              return (
-                <Card key={wl.id} className="hover:border-primary/30 transition-colors">
-                  <CardContent className="py-5 px-5">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2.5">
-                          <Eye className="w-4 h-4 text-primary shrink-0" />
-                          <h3 className="font-semibold text-foreground truncate">{wl.name}</h3>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1.5 ml-6">
-                          {summarizeFilters(f)}
-                        </p>
-                        <div className="flex items-center gap-2 mt-3 ml-6">
-                          <Badge variant={counts.d1 > 0 ? 'default' : 'secondary'} className="text-xs">
-                            {counts.d1} nya (24h)
-                          </Badge>
-                          <Badge variant={counts.d7 > 0 ? 'default' : 'secondary'} className="text-xs">
-                            {counts.d7} nya (7d)
-                          </Badge>
-                          <Badge variant={counts.d30 > 0 ? 'default' : 'secondary'} className="text-xs">
-                            {counts.d30} nya (30d)
-                          </Badge>
-                        </div>
-                      </div>
+        {/* Right: Watchlist list (2/5 = 40%) */}
+        <div className="lg:col-span-2 space-y-3">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest px-1">
+            Aktiva bevakningar
+            {!loading && watchlists.length > 0 && (
+              <Badge variant="secondary" className="ml-2 text-[10px] rounded-full px-2 py-0">
+                {watchlists.length}
+              </Badge>
+            )}
+          </h2>
 
-                      <div className="flex items-center gap-2 shrink-0 pt-1">
-                        <Link to={`/watchlists/${wl.id}`}>
-                          <Button variant="outline" size="sm" className="gap-1 text-xs">
-                            Visa <ArrowRight className="w-3 h-3" />
+          {loading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+            </div>
+          ) : watchlists.length === 0 ? (
+            <Card>
+              <CardContent className="py-14 text-center">
+                <div className="flex items-center justify-center gap-2 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <Star className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center">
+                    <ArrowUpRight className="w-5 h-5 text-info" />
+                  </div>
+                </div>
+                <h3 className="text-base font-semibold text-foreground">Inga bevakningar ännu</h3>
+                <p className="text-sm text-muted-foreground mt-1.5 max-w-[240px] mx-auto">
+                  Skapa din första bevakning för att få notiser om nya bolag
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4 rounded-full gap-1.5"
+                  onClick={scrollToForm}
+                >
+                  Kom igång <ArrowRight className="w-3 h-3" />
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2.5">
+              {watchlists.map(wl => {
+                const f = wl.filters_json as WatchlistFilters;
+                const counts = matchCounts[wl.id] ?? { d1: 0, d7: 0, d30: 0 };
+
+                return (
+                  <Card key={wl.id} className="hover:border-primary/30 transition-all duration-150">
+                    <CardContent className="py-4 px-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Eye className="w-3.5 h-3.5 text-primary shrink-0" />
+                            <h3 className="text-sm font-semibold text-foreground truncate">{wl.name}</h3>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1 ml-5.5 truncate">
+                            {summarizeFilters(f)}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-2.5 ml-5.5">
+                            <Badge variant={counts.d1 > 0 ? 'default' : 'secondary'} className="text-[10px] px-2 py-0 rounded-full">
+                              {counts.d1} (24h)
+                            </Badge>
+                            <Badge variant={counts.d7 > 0 ? 'default' : 'secondary'} className="text-[10px] px-2 py-0 rounded-full">
+                              {counts.d7} (7d)
+                            </Badge>
+                            <Badge variant={counts.d30 > 0 ? 'default' : 'secondary'} className="text-[10px] px-2 py-0 rounded-full">
+                              {counts.d30} (30d)
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Link to={`/watchlists/${wl.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
+                              <ArrowRight className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                            onClick={() => handleDelete(wl.id)}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
                           </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                          onClick={() => handleDelete(wl.id)}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
