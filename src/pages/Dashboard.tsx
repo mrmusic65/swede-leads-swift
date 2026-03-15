@@ -8,6 +8,7 @@ import { Users, TrendingUp, Eye, ArrowRight, MessageSquare, StickyNote } from 'l
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import IndustryBadge from '@/components/IndustryBadge';
 
 interface WatchlistWithCounts extends SavedWatchlist {
