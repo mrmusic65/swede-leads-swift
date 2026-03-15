@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 
 export default function AppLayout() {
   const { user } = useAuth();
+  const location = useLocation();
+  const isDiscover = location.pathname === '/discover';
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checked, setChecked] = useState(false);
 
