@@ -99,8 +99,8 @@ export default function AuthPage() {
                 'Återställ ditt lösenord'
               ) : (
                 <>
-                  Hitta dina nästa kunder{' '}
-                  <span style={{ color: '#2d9f8f' }}>innan konkurrenterna</span>
+                  Nyregistrerade svenska bolag som{' '}
+                  <span style={{ color: '#2d9f8f' }}>säljleads — varje dag</span>
                 </>
               )}
             </h1>
