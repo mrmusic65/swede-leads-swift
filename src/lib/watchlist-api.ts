@@ -29,10 +29,22 @@ export async function fetchWatchlists(userId: string): Promise<SavedWatchlist[]>
   return data ?? [];
 }
 
-export async function createWatchlist(userId: string, name: string, filters: WatchlistFilters) {
+export async function createWatchlist(
+  userId: string,
+  name: string,
+  filters: WatchlistFilters,
+  opts?: { notification_email?: string; notify_enabled?: boolean; notify_frequency?: string }
+) {
   const { data, error } = await supabase
     .from('saved_watchlists')
-    .insert({ user_id: userId, name: name.trim().slice(0, 100), filters_json: filters as any })
+    .insert({
+      user_id: userId,
+      name: name.trim().slice(0, 100),
+      filters_json: filters as any,
+      ...(opts?.notification_email !== undefined ? { notification_email: opts.notification_email } : {}),
+      ...(opts?.notify_enabled !== undefined ? { notify_enabled: opts.notify_enabled } : {}),
+      ...(opts?.notify_frequency !== undefined ? { notify_frequency: opts.notify_frequency } : {}),
+    } as any)
     .select()
     .single();
   if (error) throw error;

@@ -103,10 +103,17 @@ export default function WatchlistsPage() {
     });
     setCreating(true);
     try {
-      await createWatchlist(user.id, name, cleanFilters);
+      await createWatchlist(user.id, name, cleanFilters, {
+        notification_email: notifyEmail || undefined,
+        notify_enabled: notifyEnabled,
+        notify_frequency: notifyFrequency,
+      });
       setName('');
       setFilters({});
       setAdvancedOpen(false);
+      setNotifyEnabled(true);
+      setNotifyFrequency('instant');
+      setNotifyEmail(user.email || '');
       toast.success('Bevakning skapad');
       await load();
     } catch {
