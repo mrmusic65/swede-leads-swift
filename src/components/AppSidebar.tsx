@@ -19,7 +19,8 @@ const sections = [
   {
     label: 'ÖVERSIKT',
     items: [
-      { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+      { to: '/discover', label: 'Discover', icon: Sparkles },
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     ],
   },
   {
