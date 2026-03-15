@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, KanbanSquare } from 'lucide-react';
+import { Menu, X, LayoutDashboard, Users, Download, Zap, LogOut, Eye, CreditCard, Settings, KanbanSquare, BarChart2 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
@@ -9,6 +9,7 @@ const navItems = [
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/export', label: 'Exportera', icon: Download },
+  { to: '/statistics', label: 'Statistik', icon: BarChart2 },
 ];
 
 export default function MobileNav() {

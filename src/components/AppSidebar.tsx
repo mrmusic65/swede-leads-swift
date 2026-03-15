@@ -19,6 +19,7 @@ const navItems = [
   { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/export', label: 'Exportera', icon: Download },
+  { to: '/statistics', label: 'Statistik', icon: BarChart2 },
 ];
 
 const AVATAR_COLORS = [
