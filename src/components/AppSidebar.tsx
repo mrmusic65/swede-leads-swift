@@ -16,6 +16,7 @@ import {
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/leads', label: 'Leads', icon: Users },
+  { to: '/pipeline', label: 'Pipeline', icon: KanbanSquare },
   { to: '/watchlists', label: 'Bevakningar', icon: Eye },
   { to: '/export', label: 'Exportera', icon: Download },
 ];
