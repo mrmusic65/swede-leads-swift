@@ -18,22 +18,6 @@ function getGreeting() {
   return 'God kväll';
 }
 
-function computeScore(c: any): number {
-  let s = 0;
-  if (c.registration_date) {
-    const days = (Date.now() - new Date(c.registration_date).getTime()) / 86400000;
-    if (days <= 30) s += 40;
-    else if (days <= 90) s += 20;
-  }
-  if (c.phone_status === 'has_phone') s += 15;
-  if (c.website_status === 'has_website') s += 20;
-  else if (c.website_status === 'social_only') s += 10;
-  if (c.company_form === 'Aktiebolag') s += 10;
-  if (c.industry_label) s += 5;
-  if (c.f_tax_registered) s += 5;
-  if (c.vat_registered) s += 5;
-  return Math.min(s, 100);
-}
 
 /* ── industry config ── */
 const INDUSTRIES = [
